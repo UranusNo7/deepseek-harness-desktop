@@ -2,18 +2,29 @@
 
 [中文文档](README.md)
 
-This directory is the product and developer documentation index for DSH Desktop. The root [`README.en.md`](../README.en.md) is the short product entry point; these pages explain why the project exists, how to use it, and how to build plugins for it.
+This directory is the product and developer documentation index for DSH Desktop. The root [`README.en.md`](../README.en.md) is the short product entry point; these pages explain why the project exists, how to use it, and how to build plugins for it. Want to contribute? See [Contributing](../CONTRIBUTING.en.md).
 
 ## Read by goal
 
-| Audience | Document | Covers |
-| --- | --- | --- |
-| New users | [User guide](user-guide.en.md) | Installation, profiles, modes, terminal, plugins, and updates |
-| Project context | [Why Desktop](why-desktop.en.md) | The boundary with upstream Harness and the case for plugins |
-| Plugin authors | [Plugin development](plugin-development.en.md) | Ordinary DSH plugins, Desktop services, compatibility, and lifecycle |
-| Architecture/maintainers | [Architecture](architecture.en.md) | Electron, Host, loopback Web, profiles, and packaging |
-| Desktop service reference | [`dsh-plugin-desktop/docs/plugin-services.md`](../dsh-plugin-desktop/docs/plugin-services.md) | Stable `desktopProfiles` and `desktopPnpm` contracts with TypeScript examples |
-| Package reference | [`dsh-plugin-desktop/README.md`](../dsh-plugin-desktop/README.md) | Detailed build, runtime, release, and limitation notes |
+Ordinary users can start with the [user guide](user-guide.en.md) and never need the developer documentation.
+
+### User documentation
+
+| Document | Covers |
+| --- | --- |
+| [User guide](user-guide.en.md) | Installation, profiles, modes, terminal, plugins, and updates |
+| [FAQ](faq.en.md) | Direct answers about platforms, bundled runtime, project status, data, plugins, and updates |
+| [Why Desktop](why-desktop.en.md) | The boundary with upstream Harness and the case for plugins |
+
+### Developer and maintainer documentation
+
+| Document | Covers |
+| --- | --- |
+| [Plugin ecosystem manifesto](plugin-ecosystem.en.md) | The vision of an open, composable, sustainable plugin ecosystem and its three principles |
+| [Plugin development](plugin-development.en.md) | Ordinary DSH plugins, Desktop services, compatibility, and lifecycle |
+| [Architecture](architecture.en.md) | Electron, Host, loopback Web, profiles, and packaging |
+| [Desktop service reference](../dsh-plugin-desktop/docs/plugin-services.md) | Stable `desktopProfiles` and `desktopPnpm` contracts with TypeScript examples |
+| [Package reference](../dsh-plugin-desktop/README.md) | Detailed build, runtime, release, and limitation notes |
 
 ## How the README files are organized
 

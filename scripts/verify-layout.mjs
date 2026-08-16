@@ -30,7 +30,13 @@ if (plugin.packageManager !== undefined) {
   fail('dsh-plugin-desktop must inherit the root Yarn release')
 }
 const claudePath = resolve(root, 'CLAUDE.md')
-if (!lstatSync(claudePath).isSymbolicLink() || readlinkSync(claudePath) !== 'AGENTS.md') {
+const claudeStat = lstatSync(claudePath)
+// Windows checkouts materialize the symlink as a regular file holding the
+// target name; accept both forms so the pointer stays verified on every host.
+const claudeTarget = claudeStat.isSymbolicLink()
+  ? readlinkSync(claudePath)
+  : readFileSync(claudePath, 'utf8').trim()
+if (claudeTarget !== 'AGENTS.md') {
   fail('CLAUDE.md must link to the outer repository AGENTS.md')
 }
 for (const legacyFile of [
@@ -88,10 +94,21 @@ for (const name of Object.keys(plugin.dependencies).filter(name => name === '@de
 
 const noteRecord = readFileSync(resolve(root, noteRecordPath), 'utf8')
 for (const notePath of notePaths) {
-  const expected = run('git', ['hash-object', '--', notePath])
+  // Hash the committed blob, not the working tree: checkout line endings
+  // differ per host, while HEAD:<path> is identical everywhere.
+  const expected = run('git', ['rev-parse', `HEAD:${notePath}`])
   const recordLine = `${basename(notePath)}: ${expected}`
-  if (!noteRecord.split('\n').includes(recordLine)) {
+  if (!noteRecord.split(/\r?\n/u).includes(recordLine)) {
     fail(`${noteRecordPath} is stale for ${notePath}`)
+  }
+}
+
+const readmeRecord = readFileSync(resolve(root, 'README.i18n.yaml'), 'utf8')
+for (const readmeName of ['README.md', 'README.en.md']) {
+  const expected = run('git', ['rev-parse', `HEAD:${readmeName}`])
+  const recordLine = `${readmeName}: ${expected}`
+  if (!readmeRecord.split(/\r?\n/u).includes(recordLine)) {
+    fail(`README.i18n.yaml is stale for ${readmeName}`)
   }
 }
 

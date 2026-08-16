@@ -3293,7 +3293,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@deepseek-ai/dsh-tool-pwsh@npm:^0.1.0-rc.6":
+"@deepseek-ai/dsh-tool-pwsh@npm:0.1.0-rc.6":
   version: 0.1.0-rc.6
   resolution: "@deepseek-ai/dsh-tool-pwsh@npm:0.1.0-rc.6"
   dependencies:
@@ -3312,6 +3312,28 @@ __metadata:
     "@deepseek-ai/dsh-tools": ^0.1.0-rc.6
     "@deepseek-ai/dsh-user-approval": ^0.1.0-rc.6
   checksum: 10c0/6c743d661222490a4a88df12466737ace9886de4218b8ab6f584074d5614eb9466e9ac4dfe8f33d09f9ee56fff7b0657598cd64ea0ce619315df2dd378c805a9
+  languageName: node
+  linkType: hard
+
+"@deepseek-ai/dsh-tool-pwsh@patch:@deepseek-ai/dsh-tool-pwsh@npm%3A0.1.0-rc.6#./patches/dsh-tool-pwsh@0.1.0-rc.6.patch::locator=deepseek-harness-desktop%40workspace%3A.":
+  version: 0.1.0-rc.6
+  resolution: "@deepseek-ai/dsh-tool-pwsh@patch:@deepseek-ai/dsh-tool-pwsh@npm%3A0.1.0-rc.6#./patches/dsh-tool-pwsh@0.1.0-rc.6.patch::version=0.1.0-rc.6&hash=782ada&locator=deepseek-harness-desktop%40workspace%3A."
+  dependencies:
+    "@deepseek-ai/schemastery": "npm:^3.18.1"
+  peerDependencies:
+    "@deepseek-ai/cordis": ^4.0.1
+    "@deepseek-ai/dsh-agent": ^0.1.0-rc.6
+    "@deepseek-ai/dsh-invariants": ^0.1.0-rc.6
+    "@deepseek-ai/dsh-jobs": ^0.1.0-rc.6
+    "@deepseek-ai/dsh-llm": ^0.1.0-rc.6
+    "@deepseek-ai/dsh-sandbox": ^0.1.0-rc.6
+    "@deepseek-ai/dsh-sandbox-policy": ^0.1.0-rc.6
+    "@deepseek-ai/dsh-shell": ^0.1.0-rc.6
+    "@deepseek-ai/dsh-shell-env": ^0.1.0-rc.6
+    "@deepseek-ai/dsh-system-prompt": ^0.1.0-rc.6
+    "@deepseek-ai/dsh-tools": ^0.1.0-rc.6
+    "@deepseek-ai/dsh-user-approval": ^0.1.0-rc.6
+  checksum: 10c0/2e00ebd9b9535b2419fd7394c5af5310d085c550a83de86f1126ac75094fa315bcaddf046ec89e2f09c140fe1f6a485d4f21cc0b398fa1981766bfeed44446b4
   languageName: node
   linkType: hard
 

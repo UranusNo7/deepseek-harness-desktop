@@ -103,3 +103,13 @@ corepack yarn workspace dsh-plugin-desktop vitest run ^
 - 增量合并提交 `3566d24a2e`：上游随后新增的 `f94a18e6ac`（向 Host 插件暴露 `dsh` 命令）已合入。
 - 验证：`yarn workspace dsh-plugin-desktop check` 全绿（build/typecheck/286 tests/closure/cli/loader/profile/licenses）；`dist:win` 成功产出并验证 `dsh-plugin-desktop/dist/DSH-Desktop-2.0.2-x64-Setup.exe`；Electron 二进制已重新下载到 `dsh-plugin-desktop/node_modules/electron/dist`。
 - 待办：推送 `master`/`sync/upstream-20260816`。推送含 `.github/workflows/ci.yml` 增删，当前 gh token 无 `workflow` scope 被 GitHub 拒绝，需带 `workflow` scope 的 PAT 或重新授权；若要发版再同步 bump 版本并打 tag。
+
+### 8.2 Firecrawl 决策记录（2026-08-16，已选路径 A：等 npm 发布）
+
+- **现状**：用户在本机 core 副本（`D:\python_code\deepseek-harness-master`）添加了 `@deepseek-ai/dsh-web-fetch-firecrawl`（fetch/deep-scrape provider，`ctx.web.registerFetchProvider`，`FIRECRAWL_API_KEY`）。该包**不在** npm（404）、不在桌面 submodule 钉点（`47f9438` 的 `packages/web/` 无此目录）、不在桌面依赖树（yarn.lock 无 firecrawl 匹配）。桌面端构建（yarn install + dist:win）只消费 npm `@deepseek-ai/dsh-*@0.1.0-rc.6`，**不会**读取 core 本地副本或 submodule 源码 → 当前 v2.0.x 安装包无 firecrawl。
+- **决策**：路径 A（等上游发布到 npm 后再 bump + 挂载）；路径 B（桌面自有 vendor/patch）已否决——npm 无该包时 Yarn patch 不可用，vendor 会产生冻结副本。
+- **等待信号**：`npm view @deepseek-ai/dsh dist-tags` 出现 `latest > 0.1.0-rc.6`，且 `npm view @deepseek-ai/dsh-web-fetch-firecrawl version` 不再 404。
+- **发布后执行清单**：
+  1. bump `dsh-plugin-desktop/package.json` 全部 `@deepseek-ai/dsh-*` 依赖到新版本（与 `@deepseek-ai/dsh` 一致），`corepack yarn install` 刷新 lockfile；
+  2. 在桌面 profile 组合挂载 `web-fetch-firecrawl` 行（`dsh-plugin-desktop/cordis.patch.yml` 的 `insert` 段：`- id: web-fetch-firecrawl` / `name: '@deepseek-ai/dsh-web-fetch-firecrawl'` / `config: { apiKeyEnv: FIRECRAWL_API_KEY }`），并按新版本包文档确认 fetch provider 选择配置（`web`/`web-runtime` 行）；
+  3. 本地验证（typecheck、Windows 测试子集、build）→ 版本 bump → commit/push → tag → CI release（§3 既有流程）。

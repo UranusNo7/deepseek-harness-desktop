@@ -91,14 +91,15 @@ corepack yarn workspace dsh-plugin-desktop vitest run ^
 
 ## 8. 当前仓库状态（交接时点）
 
-- 本地 master = 远端 master = `53075d9d8b`（v2.0.2 修复 commit），工作区干净。
+- 远端 `origin/master` = `95d3fa1a50`（HANDOFF 提交）；本地 `master` 已合入上游同步 = `3566d24a2e`（**尚未推送**，见 8.1）。
 - 已发布 release：`v2.0.1`、`v2.0.2`（均含 Windows x64 NSIS 安装包资产）。
 - 本地依赖已安装（`node_modules` 就绪）；`.yarn/` 仅含 install-state（gitignore 规则：`.yarn/*` 忽略、`.yarn/patches` 放行——当前无遗留 patch 在 `.yarn/patches`，统一放根 `patches/`）。
 
 ### 8.1 上游同步（2026-08-16，分支 `sync/upstream-20260816`）
 
-- 已用 Clash 代理（`127.0.0.1:7890`，已写入本仓库 `.git/config` 的 `http.proxy`/`https.proxy`）拉取上游 `anywhere-labs/deepseek-harness-desktop:master` = `66862637`。
+- 已用 Clash 代理（`127.0.0.1:7890`，已写入本仓库 `.git/config` 的 `http.proxy`/`https.proxy`）拉取上游 `anywhere-labs/deepseek-harness-desktop:master`，同步至 `f94a18e6ac`。
 - 合并提交 `aa5fff2c2e`：解决 `package.json` 与 `dsh-plugin-desktop/package.json` 的 version 冲突，保留 fork 版本 `2.0.2`；上游带入的 Windows 卷诊断、win32 pwsh 路径、CI 门禁、Windows 全量测试可移植化、NSIS `useZip`、许可证门禁等已全部进入。
 - 追加提交 `25ff0ddc1f`：应用上游未合并 PR #90 的 koffi `3.1.5` pin（修复 Windows x64 workspace-write 沙箱 segfault），并重生成 Windows 版 `THIRD_PARTY_NOTICES.md`。
-- 验证：`yarn workspace dsh-plugin-desktop check` 全绿（build/typecheck/285 tests/closure/cli/loader/profile/licenses）；Electron 二进制已重新下载到 `dsh-plugin-desktop/node_modules/electron/dist`。
-- 待办：验证通过后把 `sync/upstream-20260816` 合入 `master` 并推送（含 `.github/workflows/ci.yml` 增删，推送可能需要带 `workflow` scope 的 PAT）；若要发版再同步 bump 版本并打 tag。
+- 增量合并提交 `3566d24a2e`：上游随后新增的 `f94a18e6ac`（向 Host 插件暴露 `dsh` 命令）已合入。
+- 验证：`yarn workspace dsh-plugin-desktop check` 全绿（build/typecheck/286 tests/closure/cli/loader/profile/licenses）；`dist:win` 成功产出并验证 `dsh-plugin-desktop/dist/DSH-Desktop-2.0.2-x64-Setup.exe`；Electron 二进制已重新下载到 `dsh-plugin-desktop/node_modules/electron/dist`。
+- 待办：推送 `master`/`sync/upstream-20260816`。推送含 `.github/workflows/ci.yml` 增删，当前 gh token 无 `workflow` scope 被 GitHub 拒绝，需带 `workflow` scope 的 PAT 或重新授权；若要发版再同步 bump 版本并打 tag。

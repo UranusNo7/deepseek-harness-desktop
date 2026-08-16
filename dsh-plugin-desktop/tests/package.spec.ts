@@ -139,6 +139,7 @@ describe('published package surface', () => {
     expect(manifest.build?.asarUnpack).toEqual([
       'package.json',
       'cordis.patch.yml',
+      'agent-presets/**',
       'build/**',
       'lib/**',
       'node_modules/**',
@@ -157,6 +158,7 @@ describe('published package surface', () => {
       'build/tray-icon.svg',
       'build/tray-icon*.png',
       'cordis.patch.yml',
+      'agent-presets/**',
       'lib/**',
       'package.json',
     ])

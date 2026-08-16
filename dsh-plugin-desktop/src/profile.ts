@@ -201,6 +201,11 @@ function shippedPresetRoot(): string {
   return join(dirname(require.resolve('@deepseek-ai/dsh/package.json')), 'config', 'agent-presets')
 }
 
+/** Resolve desktop-owned preset overrides packaged beside this package's manifest. */
+function desktopPresetRoot(): string {
+  return fileURLToPath(new URL('../agent-presets', import.meta.url))
+}
+
 /** Read a row's object config without trusting arbitrary YAML values. */
 function rowConfig(row: EntryOptions | undefined): Record<string, unknown> {
   const config = row?.config
@@ -366,7 +371,11 @@ export function prepareDesktopProfile(
       id: 'agent-presets',
       config: {
         ...rowConfig(presets),
-        roots: [{ path: shippedPresetRoot(), trust: 'system' }],
+        roots: [
+          // Desktop-owned presets precede the shipped root so any matching id wins here.
+          { path: desktopPresetRoot(), trust: 'system' },
+          { path: shippedPresetRoot(), trust: 'system' },
+        ],
       },
     })
   }

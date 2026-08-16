@@ -37,6 +37,7 @@ export const REQUIRED_PACKAGED_RUNTIME_ENTRIES = [
   'lib/update-download.js',
   'lib/updates.js',
   'lib/windows-acl-runner.js',
+  'agent-presets/minimal/agent.cordis.yml',
   'node_modules/@deepseek-ai/dsh/lib/bin.js',
   'node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html',
   'node_modules/@deepseek-ai/dsh-app-boot/lib/index.js',
@@ -47,6 +48,7 @@ export const REQUIRED_PACKAGED_RUNTIME_ENTRIES = [
 export const REQUIRED_UNPACKED_RUNTIME_ENTRIES = [
   'package.json',
   'cordis.patch.yml',
+  'agent-presets/minimal/agent.cordis.yml',
   'build/app-icon.png',
   'build/app-icon-mac.png',
   'build/tray-iconTemplate.png',

@@ -115,7 +115,12 @@ describe('desktop profile composition', () => {
     }))
     expect(patches).toContainEqual(expect.objectContaining({
       id: 'agent-presets',
-      config: expect.objectContaining({ roots: [expect.objectContaining({ trust: 'system' })] }),
+      config: expect.objectContaining({
+        roots: [
+          expect.objectContaining({ trust: 'system' }),
+          expect.objectContaining({ trust: 'system' }),
+        ],
+      }),
     }))
     expect(readFileSync(prepared.rootConfig, 'utf8')).toBe('[]\n')
     expect(prepared.homeDir).toBe(home)
@@ -164,6 +169,24 @@ describe('desktop profile composition', () => {
     expect(rows.find(row => row.id === 'desktop-profiles')).toEqual(expect.objectContaining({
       name: 'dsh-plugin-desktop/profiles',
     }))
+  })
+
+  it('mounts the desktop-owned minimal preset ahead of the shipped preset root', () => {
+    const home = temporaryHome()
+    const prepared = prepareDesktopProfile(undefined, home, 'win32')
+    const patches = prepared.patches as Array<Record<string, unknown>>
+    const agentPresets = patches.find(patch => patch.id === 'agent-presets') as {
+      config?: { roots?: Array<{ path?: string; trust?: string }> }
+    }
+    const roots = agentPresets?.config?.roots
+    expect(roots).toHaveLength(2)
+    expect(roots?.[0]?.path).toMatch(/dsh-plugin-desktop[/\\]agent-presets$/u)
+    expect(roots?.[0]?.trust).toBe('system')
+    expect(roots?.[1]?.path).toMatch(new RegExp(
+      String.raw`node_modules[/\\]@deepseek-ai[/\\]dsh[/\\]config[/\\]agent-presets`.replace(/\\/g, '\\\\'),
+      'u',
+    ))
+    expect(roots?.[1]?.trust).toBe('system')
   })
 
   it('boots a selected Web profile without overriding its compatibility UI rows', () => {

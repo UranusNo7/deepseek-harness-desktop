@@ -113,3 +113,44 @@ corepack yarn workspace dsh-plugin-desktop vitest run ^
   1. bump `dsh-plugin-desktop/package.json` 全部 `@deepseek-ai/dsh-*` 依赖到新版本（与 `@deepseek-ai/dsh` 一致），`corepack yarn install` 刷新 lockfile；
   2. 在桌面 profile 组合挂载 `web-fetch-firecrawl` 行（`dsh-plugin-desktop/cordis.patch.yml` 的 `insert` 段：`- id: web-fetch-firecrawl` / `name: '@deepseek-ai/dsh-web-fetch-firecrawl'` / `config: { apiKeyEnv: FIRECRAWL_API_KEY }`），并按新版本包文档确认 fetch provider 选择配置（`web`/`web-runtime` 行）；
   3. 本地验证（typecheck、Windows 测试子集、build）→ 版本 bump → commit/push → tag → CI release（§3 既有流程）。
+
+### 8.3 Firecrawl 插件化落地（2026-08-16，实际执行方案，替代 8.2 的"等发布"）
+
+- **决策更新**：不等官方发布，立即以**第三方插件**形态落地（8.2 的路径 B 指构建内置 vendor，仍否决；此方案是 profile 层插件，不进桌面构建）。
+- **独立插件项目**：`D:\python_code\dsh-web-fetch-firecrawl` —— `@uranusno7/dsh-web-fetch-firecrawl@0.1.0`（函数插件：`name='web-fetch-firecrawl'`、`inject=['web']`、`Config`、`apply` 注册 `firecrawl` fetch provider）。已构建 `lib/`、打包 `uranusno7-dsh-web-fetch-firecrawl-0.1.0.tgz`。peer：`dsh-web`/`dsh-credentials`/`dsh-launch-environment`/`dsh-invariants`/`cordis`（^0.1.0-rc.6 / ^4.0.1）。
+- **桌面 profile 已挂载**（`~/.dsh/profiles/desktop/cordis.patch.yml`）：
+  - insert `web-fetch-firecrawl` 行（`apiKeyEnv: FIRECRAWL_API_KEY`）；
+  - `web` 行 `config.fetchProvider: firecrawl`（dsh-web 的 `resolveProvider` 需要显式 id 或唯一 provider；当前 bundle 无其他 fetch provider）；
+  - `tool-web` 的 host 行被 web-app bundle `disabled: true`（preset 拥有模型工具行），故 fetch 开关在预设层解决。
+- **默认预设改为用户预设 `minimal-web`**（`~/.dsh/.agent-presets/minimal-web/`）：复制自**桌面自有 minimal 覆盖**（含 win32 门控，勿用 shipped npm 旧版），追加 `tool-web`（`fetch: true`）；`settings.yaml` `agent-presets.default: minimal-web`。`preset.yml` 显示名"极简模式（含 Web）"。
+- **验证通过**：插件契约（Cordis 加载注册 firecrawl provider）；从 desktop profile ESM import 链加载成功；组合 rows（fetchProvider/insert 行）正确；`settings.yaml` YAML 合法；**真实 Firecrawl 端到端抓取成功**（凭据 key + `https://example.com` → `statusCode 200`、`body` 字段与 npm rc.6 `WebFetchResult` 契约一致）。
+- **凭据**：`~/.dsh/.credentials.yaml` 已有 `FIRECRAWL_API_KEY`。
+- **分发方式（用户 2026-08-16 指示：不发布 npm，上传 GitHub）**：
+  - 插件仓库：`https://github.com/UranusNo7/dsh-web-fetch-firecrawl`（master，`lib/` 已提交以便 git 安装直接可用；`*.tgz`/`node_modules` 不入库）。
+  - 桌面 profile 依赖：`"@uranusno7/dsh-web-fetch-firecrawl": "github:UranusNo7/dsh-web-fetch-firecrawl"`（`~/.dsh/profiles/desktop/package.json`），已验证从该安装位置加载。
+  - npm 发布不再进行（`.npmrc` registry 为 npmmirror 只读镜像 + 无有效 npmjs 凭据）。
+- **教训**：PowerShell `-replace` 参数拼接错误导致 `settings.yaml` 被写空（provider 配置丢失）；已用完整原文恢复（含 `default: minimal-web`）。修改用户配置文件务必先备份/用 write 工具。
+
+### 8.4 Firecrawl 搜索与账号池（2026-08-16）
+
+- **方案 B 已实现**：`@uranusno7/dsh-web-fetch-firecrawl@0.2.0` 同时提供 `WebSearchProvider`（Firecrawl `POST /v2/search`）和 `WebFetchProvider`（`POST /v2/scrape`），两者均注册 id `firecrawl`；`search: true` 才启用搜索注册，保留 fetch-only 兼容性。
+- **账号池**：插件配置使用 `apiKeyEnvs` 引用名数组，不写入 key 值；search/fetch 共享 round-robin pool，HTTP `401/402/403/429` 对当前引用触发 `keyCooldownMs`（默认 300000ms）后切换。当前 profile 配置了 `FIRECRAWL_API_KEY`；增加账号时只需在凭据服务/environment 增加 `FIRECRAWL_API_KEY_2` 等引用并追加到数组。仅使用本人/获授权账号并遵守 Firecrawl 额度和条款；插件不创建账号或绕过配额。
+- **桌面 profile 当前策略**：禁用 `web-search-deepseek`；`web` 行同时选择 `searchProvider: firecrawl` 与 `fetchProvider: firecrawl`；`tool-web` 明确 `search: true`、`fetch: true`；插件行传 `search: true`、`apiKeyEnvs` 和冷却配置。
+- **GitHub**：仓库 `https://github.com/UranusNo7/dsh-web-fetch-firecrawl`，master 已更新到 commit `e279cd7f928563e8f3606a0160598a3ba48863a8`；`lib/` 入库以支持 GitHub 安装。当前 profile 用该 commit 的 GitHub codeload URL（git clone 通道不稳定），已从安装位置加载验证。
+- **验证**：`npm test`（3 项通过：映射、402 轮换、双 provider 注册）；真实 Firecrawl Search `DeepSeek Harness` 返回 1 个来源；旧版真实 scrape 仍返回 HTTP 200。
+
+### 8.5 标准模式 Firecrawl 变体（2026-08-16）
+
+- **用户选择**：保留 shipped `standard` 不变，新增用户预设 `C:\Users\UranusNo7\.dsh\.agent-presets\standard-firecrawl\`，显示名“标准模式（Firecrawl）”。
+- **配置**：基于当前 shipped standard 完整复制，仅将 agent-plane `tool-web` 的 `fetch` 从 `false` 改为 `true`，并明确 `search: true`；profile host 层已将 search/fetch provider 均选为 `firecrawl`。
+- **使用**：在新会话预设选择器中选择 `standard-firecrawl`；未修改 `settings.yaml` 的默认预设，原 `standard` 保持原行为。
+- **验证**：复制文件与 shipped standard 的差异仅限预设标识/说明和 `tool-web` search/fetch 配置；Firecrawl provider 仍从 profile 安装位置加载。
+
+### 8.6 v2.0.3 Firecrawl 内置发布准备（2026-08-16）
+
+- **版本**：根 `package.json`、`dsh-plugin-desktop/package.json` 和本交接文档同步到 `2.0.3`；既有 `v2.0.1`、`v2.0.2` 历史记录保持不变。
+- **固定依赖**：`@uranusno7/dsh-web-fetch-firecrawl@0.2.0` 固定到 GitHub commit `e279cd7f928563e8f3606a0160598a3ba48863a8`，桌面生产依赖使用对应的 codeload tarball URL，未使用浮动分支。
+- **桌面组合**：`dsh-plugin-desktop/cordis.patch.yml` 禁用 `web-search-deepseek`，将 `web.searchProvider` 与 `web.fetchProvider` 都设为 `firecrawl`，并由桌面层插入 `web-fetch-firecrawl`。配置只引用 `FIRECRAWL_API_KEY`，不保存密钥值。
+- **内置预设**：`dsh-plugin-desktop/agent-presets/standard-firecrawl/` 是当前 shipped `standard` 的桌面自有完整副本，仅将 `tool-web.search`、`tool-web.fetch` 打开并保留 `searchTimeoutMs: 60000`；shipped preset 与 `deepseek-harness/` 子模块均未修改。
+- **升级迁移**：当前 `C:\Users\UranusNo7\.dsh\profiles\desktop\cordis.patch.yml` 已存在 `insert: web-fetch-firecrawl`。安装包含该插件的新版本后，用户层不能再次 insert 同一 id；请只移除用户 patch 中的重复 insert 块，保留 credentials 和其他 provider 配置，然后重启 Desktop。用户 profile 中残留的 GitHub 依赖不是新的挂载来源，但可在确认不再需要后单独清理。
+- **验证状态**：本轮实现后必须先检查 `git diff`，再执行 immutable install、桌面 typecheck/loader/profile/package 验证及 `dist:win`；只有全部通过才可建议创建 `v2.0.3` release tag。

@@ -15,9 +15,35 @@
     - id: desktop-updates
       name: dsh-plugin-desktop/updates
 
+# The logical model policy package is shipped in the desktop closure. It stays
+# disabled until a profile supplies physical pi-ai routes and logical models;
+# user profile layers may enable the same row without changing the desktop base.
+- insert:
+    - id: llm-model-policy
+      name: '@deepseek-ai/dsh-llm-model-policy'
+      disabled: true
+
 # A desktop launch has no terminal operator waiting for the Web readiness line.
 - id: web-runtime
   config:
     printUrl: false
     surfaceContext: true
     trustedHosts: []
+
+# Desktop ships the Firecrawl search and fetch providers as a production dependency.
+- id: web-search-deepseek
+  disabled: true
+
+- id: web
+  config:
+    searchProvider: firecrawl
+    fetchProvider: firecrawl
+
+- insert:
+    - id: web-fetch-firecrawl
+      name: '@uranusno7/dsh-web-fetch-firecrawl'
+      config:
+        search: true
+        apiKeyEnvs:
+          - FIRECRAWL_API_KEY
+        keyCooldownMs: 300000

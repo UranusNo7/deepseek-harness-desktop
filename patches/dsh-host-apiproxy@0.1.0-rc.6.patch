@@ -1,0 +1,255 @@
+diff --git a/lib/index.js b/lib/index.js
+index 9e3afa7128..613ee89ded 100644
+--- a/lib/index.js
++++ b/lib/index.js
+@@ -492,6 +492,11 @@ const modelSelectionSchema = z$1.object({
+ 	model: z$1.string().min(1),
+ 	reasoningEffort: z$1.string().min(1).optional()
+ });
++/** Optional Fast-mode state contributed by the logical model policy plugin. */
++const modelPolicyFastStateSchema = z$1.object({
++	active: z$1.boolean(),
++	available: z$1.boolean()
++});
+ /** One adapter-owned reasoning effort. */
+ const modelReasoningEffortSchema = z$1.object({
+ 	id: z$1.string().min(1),
+@@ -508,7 +513,8 @@ const modelCatalogModelSchema = z$1.object({
+ 	id: z$1.string().min(1),
+ 	name: z$1.string().min(1),
+ 	description: z$1.string().optional(),
+-	reasoning: modelReasoningSchema.optional()
++	reasoning: modelReasoningSchema.optional(),
++	supportsFast: z$1.boolean().optional()
+ });
+ /** One successfully loaded provider group. */
+ const modelProviderGroupSchema = z$1.object({
+@@ -577,6 +583,7 @@ const sessionModelsRequestSchema = z$1.object({ sessionId: sessionIdSchema });
+ /** session.models response value. */
+ const sessionModelsValueSchema = z$1.object({
+ 	current: modelSelectionSchema,
++	fast: modelPolicyFastStateSchema.optional(),
+ 	routable: z$1.boolean(),
+ 	groups: z$1.array(modelProviderGroupSchema),
+ 	failures: z$1.array(modelCatalogFailureSchema)
+@@ -586,10 +593,14 @@ const sessionSelectModelRequestSchema = z$1.object({
+ 	sessionId: sessionIdSchema,
+ 	provider: z$1.string().min(1),
+ 	model: z$1.string().min(1),
+-	reasoningEffort: z$1.string().min(1).optional()
++	reasoningEffort: z$1.string().min(1).optional(),
++	fast: z$1.boolean().optional()
+ });
+ /** session.selectModel response value. */
+-const sessionSelectModelValueSchema = z$1.object({ selected: modelSelectionSchema });
++const sessionSelectModelValueSchema = z$1.object({
++	selected: modelSelectionSchema,
++	fast: modelPolicyFastStateSchema.optional()
++});
+ /** ContentBlock passthrough: core is merge-extensible — the type discriminant envelope is strict, the rest stays wide. */
+ const contentBlockSchema = z$1.looseObject({ type: z$1.string() });
+ /** Raster image media types accepted by the version-one browser wire. */
+@@ -1083,7 +1094,8 @@ async function buildModelCatalog(ctx) {
+ 					id: model.id,
+ 					name: model.name,
+ 					...model.description === void 0 ? {} : { description: model.description },
+-					...reasoning === void 0 ? {} : { reasoning }
++					...reasoning === void 0 ? {} : { reasoning },
++					...resolved.supportsFast === void 0 ? {} : { supportsFast: resolved.supportsFast }
+ 				};
+ 			}));
+ 			return {
+@@ -1110,6 +1122,9 @@ async function buildModelCatalog(ctx) {
+ 		failures: catalog.flatMap((item) => item.kind === "failure" ? [item.failure] : [])
+ 	};
+ }
++function modelPolicyFor(ctx) {
++	return ctx.get("modelPolicy");
++}
+ /** Wrap an error result echoing the request's rpcId. */
+ function err(request, error) {
+ 	return {
+@@ -2664,15 +2679,17 @@ function createApiProxy(ctx, defaults) {
+ 				const current = selectionFor(found.agent).current;
+ 				const { groups, failures } = await buildModelCatalog(ctx);
+ 				const routable = routeServed(current.provider);
++				const fast = modelPolicyFor(ctx)?.getFast(found.agent, current);
+ 				return ok(request, {
+ 					current: { ...current },
++					...fast === void 0 ? {} : { fast },
+ 					routable,
+ 					groups,
+ 					failures
+ 				});
+ 			},
+ 			async selectModel(request) {
+-				const { sessionId, provider, model, reasoningEffort } = request.payload;
++				const { sessionId, provider, model, reasoningEffort, fast } = request.payload;
+ 				const found = await agentFor(sessionId);
+ 				if ("error" in found) return err(request, found.error);
+ 				return serializeImageAdmission(found.agent, async () => {
+@@ -2698,13 +2715,19 @@ function createApiProxy(ctx, defaults) {
+ 							model: resolved.model,
+ 							...resolved.reasoningEffort === void 0 ? {} : { reasoningEffort: resolved.reasoningEffort }
+ 						};
++						const policy = modelPolicyFor(ctx);
++						if (fast !== void 0 && policy === void 0) throw new Error("Fast mode is unavailable in this deployment.");
++						const fastState = policy === void 0 ? void 0 : fast === void 0 ? policy.getFast(found.agent, selected) : policy.setFast(found.agent, selected, fast);
+ 						selectionFor(found.agent).current = selected;
+ 						try {
+ 							await defaults.saveDefaultModelSelection?.(selected);
+ 						} catch (error) {
+ 							ctx.logger.warn(`api-proxy: the model switch applies to this session but was not saved as the default: ${String(error)}`);
+ 						}
+-						return ok(request, { selected: { ...selected } });
++						return ok(request, {
++							selected: { ...selected },
++							...fastState === void 0 ? {} : { fast: fastState }
++						});
+ 					} catch (error) {
+ 						return err(request, {
+ 							code: "model-unavailable",
+diff --git a/lib/types/api/index.d.ts b/lib/types/api/index.d.ts
+index ebaa5e8eb1..18e99d8974 100644
+--- a/lib/types/api/index.d.ts
++++ b/lib/types/api/index.d.ts
+@@ -38,7 +38,7 @@ export interface ApiProxy {
+      */
+     respond(message: ClientResponse): Promise<RpcReceipt>;
+ }
+-export type { HistoryEntry, ModelCatalogFailure, ModelCatalogModel, ModelProviderGroup, ModelReasoning, ModelReasoningEffort, ModelSelection, PromptContentPart, QueueAction, SessionModels, SessionListMetadata, SessionProjectionsBlock, SessionSearchItem, SessionsApi, SessionSummary, } from './sessions.ts';
++export type { HistoryEntry, ModelCatalogFailure, ModelCatalogModel, ModelPolicyFastState, ModelProviderGroup, ModelReasoning, ModelReasoningEffort, ModelSelection, PromptContentPart, QueueAction, SessionModels, SessionListMetadata, SessionProjectionsBlock, SessionSearchItem, SessionsApi, SessionSummary, } from './sessions.ts';
+ export type { DirectoryEntry, DirectoryListing, HostApi } from './host.ts';
+ export type { SubagentAddress, SubagentCatalog, SubagentInterruptReceipt, SubagentListEntry, SubagentPromptReceipt, SubagentsApi, } from './subagents.ts';
+ export type { JobView } from './jobs.ts';
+diff --git a/lib/types/api/llm.schema.d.ts b/lib/types/api/llm.schema.d.ts
+index 1452ae8536..f6858972a5 100644
+--- a/lib/types/api/llm.schema.d.ts
++++ b/lib/types/api/llm.schema.d.ts
+@@ -44,6 +44,7 @@ export declare const llmModelsValueSchema: z.ZodObject<{
+                 }, z.core.$strip>>;
+                 defaultEffort: z.ZodOptional<z.ZodString>;
+             }, z.core.$strip>>;
++            supportsFast: z.ZodOptional<z.ZodBoolean>;
+         }, z.core.$strip>>;
+     }, z.core.$strip>>;
+     failures: z.ZodArray<z.ZodObject<{
+diff --git a/lib/types/api/sessions.d.ts b/lib/types/api/sessions.d.ts
+index 48132be0cc..ac1f7b28fd 100644
+--- a/lib/types/api/sessions.d.ts
++++ b/lib/types/api/sessions.d.ts
+@@ -123,6 +123,15 @@ export interface ModelCatalogModel {
+     description?: string;
+     /** Exact-route reasoning metadata when the adapter exposes it. */
+     reasoning?: ModelReasoning;
++    /** Whether the selected model accepts the session's Fast mode. */
++    supportsFast?: boolean;
++}
++/** Session-local Fast mode state supplied by an optional model policy plugin. */
++export interface ModelPolicyFastState {
++    /** Whether the durable Fast event is active for this session. */
++    active: boolean;
++    /** Whether the current provider/model route supports Fast. */
++    available: boolean;
+ }
+ /** One provider and the models it advertised successfully. */
+ export interface ModelProviderGroup {
+@@ -146,6 +155,8 @@ export interface ModelCatalogFailure {
+ export interface SessionModels {
+     /** Model selection for the session's next assembled step. */
+     current: ModelSelection;
++    /** Optional model-policy Fast state; absent when that plugin is not mounted. */
++    fast?: ModelPolicyFastState;
+     /**
+      * Whether an adapter currently serves `current.provider`, and therefore
+      * whether this session can start a turn at all. Deliberately NOT derivable
+@@ -302,15 +313,18 @@ export interface SessionsApi {
+     /**
+      * Selects the complete model selection for this session. Exact model metadata
+      * validates an optional reasoning effort, while catalog membership remains
+-     * advisory. Session-backed subagents reject with `agent-busy`.
++     * advisory. An optional Fast value is committed by the mounted model-policy
++     * controller. Session-backed subagents reject with `agent-busy`.
+      */
+     selectModel(request: RpcRequest<{
+         sessionId: SessionId;
+         provider: string;
+         model: string;
+         reasoningEffort?: string;
++        fast?: boolean;
+     }>): Promise<RpcResponse<{
+         selected: ModelSelection;
++        fast?: ModelPolicyFastState;
+     }>>;
+     /**
+      * Renames a session: appends a `session/title` event with the `user`
+diff --git a/lib/types/api/sessions.schema.d.ts b/lib/types/api/sessions.schema.d.ts
+index f638b0d1c5..72e0c67655 100644
+--- a/lib/types/api/sessions.schema.d.ts
++++ b/lib/types/api/sessions.schema.d.ts
+@@ -94,6 +94,11 @@ export declare const modelSelectionSchema: z.ZodObject<{
+     model: z.ZodString;
+     reasoningEffort: z.ZodOptional<z.ZodString>;
+ }, z.core.$strip>;
++/** Optional Fast-mode state contributed by the logical model policy plugin. */
++export declare const modelPolicyFastStateSchema: z.ZodObject<{
++    active: z.ZodBoolean;
++    available: z.ZodBoolean;
++}, z.core.$strip>;
+ /** One adapter-owned reasoning effort. */
+ export declare const modelReasoningEffortSchema: z.ZodObject<{
+     id: z.ZodString;
+@@ -122,6 +127,7 @@ export declare const modelCatalogModelSchema: z.ZodObject<{
+         }, z.core.$strip>>;
+         defaultEffort: z.ZodOptional<z.ZodString>;
+     }, z.core.$strip>>;
++    supportsFast: z.ZodOptional<z.ZodBoolean>;
+ }, z.core.$strip>;
+ /** One successfully loaded provider group. */
+ export declare const modelProviderGroupSchema: z.ZodObject<{
+@@ -139,6 +145,7 @@ export declare const modelProviderGroupSchema: z.ZodObject<{
+             }, z.core.$strip>>;
+             defaultEffort: z.ZodOptional<z.ZodString>;
+         }, z.core.$strip>>;
++        supportsFast: z.ZodOptional<z.ZodBoolean>;
+     }, z.core.$strip>>;
+ }, z.core.$strip>;
+ /** One provider-local catalog failure. */
+@@ -183,6 +190,10 @@ export declare const sessionModelsValueSchema: z.ZodObject<{
+         model: z.ZodString;
+         reasoningEffort: z.ZodOptional<z.ZodString>;
+     }, z.core.$strip>;
++    fast: z.ZodOptional<z.ZodObject<{
++        active: z.ZodBoolean;
++        available: z.ZodBoolean;
++    }, z.core.$strip>>;
+     routable: z.ZodBoolean;
+     groups: z.ZodArray<z.ZodObject<{
+         id: z.ZodString;
+@@ -199,6 +210,7 @@ export declare const sessionModelsValueSchema: z.ZodObject<{
+                 }, z.core.$strip>>;
+                 defaultEffort: z.ZodOptional<z.ZodString>;
+             }, z.core.$strip>>;
++            supportsFast: z.ZodOptional<z.ZodBoolean>;
+         }, z.core.$strip>>;
+     }, z.core.$strip>>;
+     failures: z.ZodArray<z.ZodObject<{
+@@ -213,6 +225,7 @@ export declare const sessionSelectModelRequestSchema: z.ZodObject<{
+     provider: z.ZodString;
+     model: z.ZodString;
+     reasoningEffort: z.ZodOptional<z.ZodString>;
++    fast: z.ZodOptional<z.ZodBoolean>;
+ }, z.core.$strip>;
+ /** session.selectModel response value. */
+ export declare const sessionSelectModelValueSchema: z.ZodObject<{
+@@ -221,6 +234,10 @@ export declare const sessionSelectModelValueSchema: z.ZodObject<{
+         model: z.ZodString;
+         reasoningEffort: z.ZodOptional<z.ZodString>;
+     }, z.core.$strip>;
++    fast: z.ZodOptional<z.ZodObject<{
++        active: z.ZodBoolean;
++        available: z.ZodBoolean;
++    }, z.core.$strip>>;
+ }, z.core.$strip>;
+ /** ContentBlock passthrough: core is merge-extensible — the type discriminant envelope is strict, the rest stays wide. */
+ export declare const contentBlockSchema: z.ZodObject<{

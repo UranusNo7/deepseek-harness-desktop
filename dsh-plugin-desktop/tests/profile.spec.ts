@@ -171,6 +171,102 @@ describe('desktop profile composition', () => {
     }))
   })
 
+  it('composes the built-in Firecrawl provider rows', () => {
+    const home = temporaryHome()
+    const prepared = prepareDesktopProfile(undefined, home, 'darwin')
+    const rows = composeEntries([prepared.patches])
+
+    expect(rows).toContainEqual(expect.objectContaining({
+      id: 'web-search-deepseek',
+      disabled: true,
+    }))
+    expect(rows).toContainEqual(expect.objectContaining({
+      id: 'web',
+      config: expect.objectContaining({
+        searchProvider: 'firecrawl',
+        fetchProvider: 'firecrawl',
+      }),
+    }))
+    expect(rows).toContainEqual(expect.objectContaining({
+      id: 'web-fetch-firecrawl',
+      name: '@uranusno7/dsh-web-fetch-firecrawl',
+      config: {
+        search: true,
+        apiKeyEnvs: ['FIRECRAWL_API_KEY'],
+        keyCooldownMs: 300000,
+      },
+    }))
+  })
+
+  it('migrates the legacy Firecrawl insert without requiring a profile edit', () => {
+    const home = temporaryHome()
+    const profileDir = ensureDesktopProfile(home)
+    writeFileSync(join(profileDir, 'cordis.patch.yml'), [
+      '- insert:',
+      '    - id: web-fetch-firecrawl',
+      "      name: '@uranusno7/dsh-web-fetch-firecrawl'",
+      '      config:',
+      '        search: true',
+      '        fetch: true',
+      '        apiKeyEnvs:',
+      '          - FIRECRAWL_API_KEY',
+      '        keyCooldownMs: 300000',
+      '',
+    ].join('\n'))
+
+    const prepared = prepareDesktopProfile(undefined, home, 'darwin')
+    const rows = composeEntries([prepared.patches])
+    expect(rows.filter(row => row.id === 'web-fetch-firecrawl')).toHaveLength(1)
+    expect(rows.find(row => row.id === 'web-fetch-firecrawl')).toEqual(expect.objectContaining({
+      name: '@uranusno7/dsh-web-fetch-firecrawl',
+      config: expect.objectContaining({ fetch: true }),
+    }))
+  })
+
+  it('ships the logical model policy row disabled until a profile supplies routes', () => {
+    const home = temporaryHome()
+    const prepared = prepareDesktopProfile(undefined, home, 'darwin')
+    const rows = composeEntries([prepared.patches])
+
+    expect(rows).toContainEqual(expect.objectContaining({
+      id: 'llm-model-policy',
+      name: '@deepseek-ai/dsh-llm-model-policy',
+      disabled: true,
+    }))
+  })
+
+  it('lets the profile layer enable the shared logical policy for every preset', () => {
+    const home = temporaryHome()
+    writeFileSync(join(home, 'cordis.patch.yml'), [
+      '- id: llm-model-policy',
+      "  name: '@deepseek-ai/dsh-llm-model-policy'",
+      '  disabled: false',
+      '  config:',
+      '    providerId: model-policy',
+      '    models:',
+      '      gpt-5.6:',
+      '        supportsFast: true',
+      '        routes:',
+      '          - provider: openai',
+      '            model: gpt-5.6',
+      '',
+    ].join('\n'))
+
+    const prepared = prepareDesktopProfile(undefined, home, 'darwin')
+    const rows = composeEntries([prepared.patches])
+    expect(rows).toContainEqual(expect.objectContaining({
+      id: 'llm-model-policy',
+      name: '@deepseek-ai/dsh-llm-model-policy',
+      disabled: false,
+      config: expect.objectContaining({
+        providerId: 'model-policy',
+        models: expect.objectContaining({
+          'gpt-5.6': expect.objectContaining({ supportsFast: true }),
+        }),
+      }),
+    }))
+  })
+
   it('mounts the desktop-owned minimal preset ahead of the shipped preset root', () => {
     const home = temporaryHome()
     const prepared = prepareDesktopProfile(undefined, home, 'win32')

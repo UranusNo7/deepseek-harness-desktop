@@ -43,6 +43,22 @@ dsh plugin update
 
 显式 `--profile <name>` 始终优先。插件变更后需要重启 DSH Desktop，才能让新的 bundle 进入 Loader 组合。
 
+### 内置 Firecrawl Web provider
+
+从 2.0.3 开始，Windows 和 macOS 安装包内置 `@uranusno7/dsh-web-fetch-firecrawl`，不需要再通过 profile 手动安装。桌面自有组合会禁用 `web-search-deepseek`，并将 `web_search` 与 `web_fetch` 都指向 Firecrawl；只保存 `FIRECRAWL_API_KEY` 这样的凭据引用名，不在安装包或 profile patch 中保存密钥值。
+
+选择 `standard-firecrawl` 预设可保留标准模式的全部工具，并同时开启 `web_search` 与 `web_fetch`。使用前请在 DSH credentials 或启动环境中提供 `FIRECRAWL_API_KEY`。
+
+升级时，Desktop 会自动兼容旧的 `$DSH_HOME/profiles/desktop/cordis.patch.yml` 中的 `insert: web-fetch-firecrawl`，将它转换为对内置 row 的配置覆盖，不会要求先进入 UI 修改 profile。保留现有 credentials 和其他 provider 配置；后续可以手动删除这个旧的 insert 块，但不是启动前置条件。
+
+### 逻辑模型与 Fast
+
+桌面运行时也提供可选的跨 provider 逻辑模型策略。桌面基础 patch 只负责携带 `@deepseek-ai/dsh-llm-model-policy`，并默认禁用它；profile 需要提供物理 provider 路由和逻辑模型后，再用同一个 `llm-model-policy` row 启用。这样所有 Agent preset 都复用同一套 Host 模型目录、选择和请求策略，不需要在每个 preset 中重复挂载。
+
+在已启用策略且当前模型声明 `supportsFast: true` 时，模型选择器会在 reasoning-depth 下面显示 **Fast** 开关。升级前已经记录为物理 provider/model 的 GPT 对话，只要该 provider/model 与策略中的 route 完全匹配，也会识别为可用 Fast；不会改写已有 history。Fast 只对 GPT 逻辑模型开放；切换到未声明 Fast 的模型前必须先关闭，Host 会明确拒绝非 GPT 模型的 Fast 请求。Fast 状态写入当前 session 的 `model-policy/fast` 事件，因此会随 session history 和远程 history 恢复，不是只存在于浏览器本地的临时状态。
+
+对于支持 service tier 的 OpenAI 兼容路由，Fast 会发送为 Responses/兼容请求的 `service_tier: "priority"`。Desktop 不提供 `/fast`、`/fast off` 或 `/fast status` 命令；请直接使用模型选择器开关。凭据仍只配置环境变量引用名，不要把 API key 写进 profile patch。
+
 ## 打开终端
 
 从托盘选择 **Open DSH Terminal**。macOS 会打开 Terminal，Windows 会优先使用 Windows Terminal，找不到时回退到 PowerShell 或命令提示符。

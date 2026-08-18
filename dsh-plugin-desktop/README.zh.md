@@ -150,7 +150,7 @@ npx dsh-plugin-desktop
 
 选择 **Download** 后，应用会先重新确认服务端版本没有变化，然后才首次请求对应平台用于计数的固定下载入口。DSH Desktop 使用 Electron 网络跟随 service redirect，把不超过 1 GiB 的文件流式写入私有、按版本划分的 user-data 目录，并在交付前拒绝不完整的 DMG 或 Windows PE。macOS 会打开下载好的 DMG，并提示用户替换 `Applications` 中的应用后重新打开。Windows 会在 NSIS 安装器准备完成后再次确认；选择 **Restart and Install** 会启动安装器，并在当前进程退出前请求 Cordis 有序 teardown。下载、文件系统与安装器打开失败都会保持静默，同时保留托盘中的可重试版本操作。
 
-Release operator 必须先发布两个平台产物，再让版本可被发现。产物与 download redirect 准备完成后，在 Upstash Redis console 中把 `deepseek-harness-desktop:release:version` 设置为规范的 stable 版本，例如 `SET deepseek-harness-desktop:release:version 2.0.2`。版本 API 会立即生效；key 缺失、服务不可用或值无效时，Desktop 不会显示任何提示。
+Release operator 必须先发布两个平台产物，再让版本可被发现。产物与 download redirect 准备完成后，在 Upstash Redis console 中把 `deepseek-harness-desktop:release:version` 设置为规范的 stable 版本，例如 `SET deepseek-harness-desktop:release:version 2.0.5`。版本 API 会立即生效；key 缺失、服务不可用或值无效时，Desktop 不会显示任何提示。
 
 在 macOS 与 Windows 上，**Open DSH Terminal** 会打开以当前激活 profile 为工作目录的系统终端。欢迎信息会显示应用版本、当前 profile、profile 目录与 DSH home，并列出配置与插件管理命令。在该终端内，裸 `dsh`、`dsh --dump-config`，以及没有选择 profile 的 plugin 子命令都会默认使用当前激活 profile；显式 `--profile` 与上游 `web` alias 会保留原有含义。DSH Desktop 会在自身 user-data 目录下按 profile 生成私有 `dsh`、`pnpm` 与 `node` shim，设置 `DSH_HOME`，使用当前 profile 作为工作目录，并且只在该终端的 `PATH` 前置 shim 目录；之后切换 profile 不会改变已经打开的终端命令。它不会修改全局环境或 shell 启动文件。macOS launcher 会先保留用户的交互式 zsh 或 bash 设置，再恢复 desktop 自有变量。Windows 会依次选择 PowerShell 7、Windows PowerShell 或命令提示符，并在新的 Windows Terminal 窗口中打开；如果 `wt.exe` 不可用，则由私有 `cmd start` broker 创建可见控制台。同步启动失败与 broker 非正常退出会显示在原生错误对话框中。Linux 不组合该终端命令。
 
@@ -174,7 +174,7 @@ corepack.cmd yarn dist:win
 
 该流程不要求 Python 或 Visual Studio C++ Build Tools。Windows 命令会直接使用 `node-pty` 内置的 x64 Node-API 二进制，而不会让 Electron Builder 从源码重新编译；如果安装包 staging tree 缺少这些二进制，packaged-runtime gate 会直接拒绝产物。
 
-`dist:win` 会拒绝非 Windows 或非 x64 宿主，先执行一组 Windows 可运行的 gate，其中包括 build、全部 TypeScript compiler face、打包与原生 shell 聚焦测试，以及 runtime-closure verifier；随后再构建 NSIS 安装向导，并校验生成的两个 PE 文件。完整跨平台 suite 仍由 CI 持有，因为其中部分 POSIX 执行测试不是 Windows 程序。安装向导支持当前用户安装或提升权限后的所有用户安装，可更改安装目录，会创建开始菜单与桌面快捷方式，并且卸载应用时保留 DSH 用户数据。版本 `2.0.2` 会输出到 `dsh-plugin-desktop\dist\DSH-Desktop-2.0.2-x64-Setup.exe`；用于 smoke 测试的未封装程序仍位于 `dsh-plugin-desktop\dist\win-unpacked\DSH Desktop.exe`。
+`dist:win` 会拒绝非 Windows 或非 x64 宿主，先执行一组 Windows 可运行的 gate，其中包括 build、全部 TypeScript compiler face、打包与原生 shell 聚焦测试，以及 runtime-closure verifier；随后再构建 NSIS 安装向导，并校验生成的两个 PE 文件。完整跨平台 suite 仍由 CI 持有，因为其中部分 POSIX 执行测试不是 Windows 程序。安装向导支持当前用户安装或提升权限后的所有用户安装，可更改安装目录，会创建开始菜单与桌面快捷方式，并且卸载应用时保留 DSH 用户数据。版本 `2.0.5` 会输出到 `dsh-plugin-desktop\dist\DSH-Desktop-2.0.5-x64-Setup.exe`；用于 smoke 测试的未封装程序仍位于 `dsh-plugin-desktop\dist\win-unpacked\DSH Desktop.exe`。
 
 该本地命令会主动移除 Windows 证书变量，并设置 `signExecutable=false`。产物可以安装测试，但没有 Authenticode publisher，因此 Windows 可能显示 Unknown publisher 或 SmartScreen 警告。签名后的 Windows release、证书校验、安装器升级与卸载测试，以及原生 UI 和 sandbox smoke 仍是独立的发布 gate。
 

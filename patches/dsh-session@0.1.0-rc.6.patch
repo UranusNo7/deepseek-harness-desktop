@@ -1,0 +1,24 @@
+diff --git a/lib/index.js b/lib/index.js
+index 1102035f37..2a69f6582e 100644
+--- a/lib/index.js
++++ b/lib/index.js
+@@ -1071,6 +1071,7 @@ const KNOWN_SESSION_EVENT_TYPES = new Set([
+ 	"hook/result",
+ 	"llm/retry",
+ 	"llm/retry-started",
++	"model-policy/fast",
+ 	"permission/preset",
+ 	"plan/mode",
+ 	"request/context",
+diff --git a/lib/types/known-event-types.js b/lib/types/known-event-types.js
+index 7541caa417..432f87d170 100644
+--- a/lib/types/known-event-types.js
++++ b/lib/types/known-event-types.js
+@@ -35,6 +35,7 @@ export const KNOWN_SESSION_EVENT_TYPES = new Set([
+     'hook/result',
+     'llm/retry',
+     'llm/retry-started',
++    'model-policy/fast',
+     'permission/preset',
+     'plan/mode',
+     'request/context',

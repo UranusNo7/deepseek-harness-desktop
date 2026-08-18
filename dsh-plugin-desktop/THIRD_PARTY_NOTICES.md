@@ -133,6 +133,7 @@ the package names, versions, and licenses for transparency.
 | @deepseek-ai/dsh-launch-environment | 0.1.0-rc.6 | MIT |
 | @deepseek-ai/dsh-llm | 0.1.0-rc.6 | MIT |
 | @deepseek-ai/dsh-llm-deepseek | 0.1.0-rc.6 | MIT |
+| @deepseek-ai/dsh-llm-model-policy | 0.1.0-desktop.1 | MIT |
 | @deepseek-ai/dsh-llm-pi-ai | 0.1.0-rc.6 | MIT |
 | @deepseek-ai/dsh-llm-retry | 0.1.0-rc.6 | MIT |
 | @deepseek-ai/dsh-mcp-client | 0.1.0-rc.6 | MIT |
@@ -286,6 +287,7 @@ the package names, versions, and licenses for transparency.
 | @types/retry | 0.12.0 | MIT |
 | @types/unist | 3.0.3 | MIT |
 | @ungap/structured-clone | 1.3.3 | ISC |
+| @uranusno7/dsh-web-fetch-firecrawl | 0.2.0 | MIT |
 | @vscode/ripgrep | 1.18.0 | MIT |
 | @vscode/ripgrep-win32-x64 | 1.18.0 | MIT |
 | accepts | 2.0.0 | MIT |

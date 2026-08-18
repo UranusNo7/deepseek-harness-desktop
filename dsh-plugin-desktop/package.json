@@ -1,6 +1,6 @@
 {
   "name": "dsh-plugin-desktop",
-  "version": "2.0.2",
+  "version": "2.0.5",
   "description": "DSH Desktop: an Electron shell composed as a DeepSeek Harness Cordis plugin",
   "license": "MIT",
   "publishConfig": {
@@ -64,6 +64,7 @@
     "build/tray-icon*.png",
     "cordis.patch.yml",
     "agent-presets/**",
+    "vendor/dsh-llm-model-policy/**",
     "docs/**",
     "lib/**/*.js",
     "lib/**/*.map",
@@ -166,6 +167,8 @@
     "@deepseek-ai/dsh-jobs": "0.1.0-rc.6",
     "@deepseek-ai/dsh-launch-environment": "0.1.0-rc.6",
     "@deepseek-ai/dsh-llm": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-llm-model-policy": "file:vendor/dsh-llm-model-policy",
+    "@deepseek-ai/dsh-llm-pi-ai": "0.1.0-rc.6",
     "@deepseek-ai/dsh-llm-retry": "0.1.0-rc.6",
     "@deepseek-ai/dsh-message-feedback": "0.1.0-rc.6",
     "@deepseek-ai/dsh-output-retention": "0.1.0-rc.6",
@@ -210,6 +213,7 @@
     "@deepseek-ai/dsh-web-app": "0.1.0-rc.6",
     "@deepseek-ai/dsh-workflow": "0.1.0-rc.6",
     "@deepseek-ai/schemastery": "^3.18.1",
+    "@uranusno7/dsh-web-fetch-firecrawl": "https://codeload.github.com/UranusNo7/dsh-web-fetch-firecrawl/tar.gz/e279cd7f928563e8f3606a0160598a3ba48863a8",
     "koffi": "3.1.5",
     "node-addon-require-builtin": "^0.1.4",
     "pnpm": "11.7.0",

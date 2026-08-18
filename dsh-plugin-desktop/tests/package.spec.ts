@@ -95,6 +95,82 @@ describe('published package surface', () => {
     expect(readFileSync(new URL('cordis.patch.yml', packageRoot), 'utf8')).toContain('name: dsh-plugin-desktop/updates')
   })
 
+  it('ships the fixed Firecrawl provider and standard preset variant', () => {
+    expect(manifest.dependencies?.['@uranusno7/dsh-web-fetch-firecrawl']).toBe(
+      'https://codeload.github.com/UranusNo7/dsh-web-fetch-firecrawl/tar.gz/e279cd7f928563e8f3606a0160598a3ba48863a8',
+    )
+    const patch = readFileSync(new URL('cordis.patch.yml', packageRoot), 'utf8').replaceAll('\r\n', '\n')
+    expect(patch).toContain('- id: web-search-deepseek\n  disabled: true')
+    expect(patch).toContain('searchProvider: firecrawl')
+    expect(patch).toContain('fetchProvider: firecrawl')
+    expect(patch).toContain('id: web-fetch-firecrawl')
+    expect(patch).toContain("name: '@uranusno7/dsh-web-fetch-firecrawl'")
+    expect(patch).toContain('apiKeyEnvs:\n          - FIRECRAWL_API_KEY')
+    expect(patch).toContain('keyCooldownMs: 300000')
+
+    const preset = readFileSync(new URL('agent-presets/standard-firecrawl/agent.cordis.yml', packageRoot), 'utf8')
+    expect(preset).toContain("- id: tool-web\n  name: '@deepseek-ai/dsh-tool-web'\n  config:\n    search: true\n    fetch: true\n    searchTimeoutMs: 60000")
+    const metadata = readFileSync(new URL('agent-presets/standard-firecrawl/preset.yml', packageRoot), 'utf8')
+    expect(metadata).toContain('name: 标准模式（Firecrawl）')
+    expect(metadata).toContain('保留标准模式原有全部工具')
+    expect(metadata).toContain('web_search 和 web_fetch')
+    expect(metadata).toContain('Firecrawl provider')
+  })
+
+  it('ships the Fast logical model policy closure and desktop opt-in row', () => {
+    expect(manifest.dependencies?.['@deepseek-ai/dsh-llm-model-policy']).toBe(
+      'file:vendor/dsh-llm-model-policy',
+    )
+    const policyManifest = JSON.parse(readFileSync(
+      new URL('vendor/dsh-llm-model-policy/package.json', packageRoot),
+      'utf8',
+    )) as { name?: unknown; main?: unknown; types?: unknown; version?: unknown }
+    expect(policyManifest).toEqual(expect.objectContaining({
+      name: '@deepseek-ai/dsh-llm-model-policy',
+      main: 'lib/index.js',
+      types: 'lib/types/index.d.ts',
+    }))
+    expect(policyManifest.version).toBe('0.1.0-desktop.1')
+    const policyRuntime = readFileSync(new URL('vendor/dsh-llm-model-policy/lib/index.js', packageRoot), 'utf8')
+    expect(policyRuntime).toContain('model-policy/fast')
+    expect(policyRuntime).toContain('policy.routes.some')
+    const modelSelectionClient = readFileSync(new URL(
+      'node_modules/@deepseek-ai/dsh-client-ui-model-selection/lib/client.js',
+      packageRoot,
+    ), 'utf8')
+    expect(modelSelectionClient).toContain('toggleFast')
+    expect(modelSelectionClient).toContain('fastOption')
+    expect(modelSelectionClient.indexOf('fastOption')).toBeGreaterThan(modelSelectionClient.indexOf('reasoning'))
+    expect(modelSelectionClient).not.toMatch(/\/fast(?:\s|["'`])/u)
+    const connectionClient = readFileSync(new URL(
+      'node_modules/@deepseek-ai/dsh-client-connection/lib/client.js',
+      packageRoot,
+    ), 'utf8')
+    expect(connectionClient).toContain('modelPolicyFastStateSchema')
+    expect(connectionClient).toContain('supportsFast: boolean().optional()')
+    expect(connectionClient).toContain('fast: modelPolicyFastStateSchema.optional()')
+    const slashCommands = readFileSync(new URL(
+      'node_modules/@deepseek-ai/dsh-commands/lib/index.js',
+      packageRoot,
+    ), 'utf8')
+    expect(slashCommands).not.toMatch(/\/fast(?:\s|["'`])/u)
+    const patch = readFileSync(new URL('cordis.patch.yml', packageRoot), 'utf8').replaceAll('\r\n', '\n')
+    expect(patch).toContain('id: llm-model-policy')
+    expect(patch).toContain("name: '@deepseek-ai/dsh-llm-model-policy'")
+    expect(patch).toContain('disabled: true')
+    for (const key of [
+      '@deepseek-ai/dsh-llm@npm:0.1.0-rc.6',
+      '@deepseek-ai/dsh-llm-pi-ai@npm:0.1.0-rc.6',
+      '@deepseek-ai/dsh-host-apiproxy@npm:0.1.0-rc.6',
+      '@deepseek-ai/dsh-api-remotes@npm:0.1.0-rc.6',
+      '@deepseek-ai/dsh-client-ui-model-selection@npm:0.1.0-rc.6',
+      '@deepseek-ai/dsh-client-connection@npm:0.1.0-rc.6',
+      '@deepseek-ai/dsh-session@npm:0.1.0-rc.6',
+    ]) {
+      expect(workspaceManifest.resolutions?.[key]).toBeTypeOf('string')
+    }
+  })
+
   it('keeps unaudited marketplace packages out of the published runtime', () => {
     expect(manifest.dependencies).not.toHaveProperty('dshmarket')
     expect(manifest.optionalDependencies ?? {}).not.toHaveProperty('dshmarket')
@@ -155,6 +231,7 @@ describe('published package surface', () => {
       'build/app-icon-mac.png',
       'build/tray-icon.svg',
       'build/tray-icon*.png',
+      'vendor/dsh-llm-model-policy/**',
       'docs/**',
     ]))
     expect(manifest.build?.files).toEqual([

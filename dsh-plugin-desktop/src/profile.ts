@@ -58,6 +58,8 @@ const DESKTOP_SETTINGS_NAMESPACE = 'dsh-desktop'
 const UI_LAYOUT_PACKAGE = '@deepseek-ai/dsh-client-ui-layout'
 const UI_SIDEBAR_PACKAGE = '@deepseek-ai/dsh-client-ui-sidebar'
 const UI_CONVERSATION_PACKAGE = '@deepseek-ai/dsh-client-ui-conversation'
+const FIRECRAWL_ROW_ID = 'web-fetch-firecrawl'
+const FIRECRAWL_PACKAGE = '@uranusno7/dsh-web-fetch-firecrawl'
 
 /**
  * Parse desktop presentation state and reject corrupted values.
@@ -287,6 +289,32 @@ function omitUnresolvedOptionalEntries(
 }
 
 /**
+ * Migrate the pre-2.0.3 Firecrawl insert without rewriting the user's patch file.
+ * The Desktop base layer now owns this row; converting a legacy duplicate insert
+ * into an id-targeted patch preserves user config while avoiding Loader rejection.
+ */
+function migrateLegacyFirecrawlInsert(patches: PatchOptions[]): PatchOptions[] {
+  return patches.flatMap((patch) => {
+    if (!Array.isArray(patch.insert)) return [patch]
+    const legacyRows = patch.insert.filter(row => row.id === FIRECRAWL_ROW_ID
+      && row.name === FIRECRAWL_PACKAGE)
+    if (legacyRows.length === 0) return [patch]
+    const insert = patch.insert.filter(row => !(row.id === FIRECRAWL_ROW_ID
+      && row.name === FIRECRAWL_PACKAGE))
+    const migrated = legacyRows.map(row => ({
+      id: FIRECRAWL_ROW_ID,
+      name: FIRECRAWL_PACKAGE,
+      ...(row.disabled === undefined ? {} : { disabled: row.disabled }),
+      config: rowConfig(row),
+    }))
+    return [
+      ...(insert.length === 0 ? [] : [{ ...patch, insert }]),
+      ...migrated,
+    ]
+  })
+}
+
+/**
  * Load and compose one desktop profile generation.
  * @param telemetryDisabled - inherited DSH telemetry opt-out value.
  * @param home - Harness home containing profiles and the machine-wide patch.
@@ -323,13 +351,15 @@ export function prepareDesktopProfile(
   }
 
   const loadedHomePatches = loadOptionalPatches(BIN_NAME, join(home, PROFILE_PATCH_FILENAME)) ?? []
-  const { patches: homePatches, skipped: skippedOptionalEntries } = omitUnresolvedOptionalEntries(
+  const { patches: filteredHomePatches, skipped: skippedOptionalEntries } = omitUnresolvedOptionalEntries(
     loadedHomePatches,
     bareModuleBaseUrl,
   )
+  const homePatches = migrateLegacyFirecrawlInsert(filteredHomePatches)
+  const profilePatches = migrateLegacyFirecrawlInsert(profile.patches)
   const patches: PatchOptions[] = [
     ...bundlePatches,
-    ...profile.patches,
+    ...profilePatches,
     ...homePatches,
   ]
   const rows = new Map<string, EntryOptions>()

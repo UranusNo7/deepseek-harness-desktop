@@ -1,0 +1,74 @@
+diff --git a/lib/types/client/api.d.ts b/lib/types/client/api.d.ts
+index 1102985e8c..0ed4139fc2 100644
+--- a/lib/types/client/api.d.ts
++++ b/lib/types/client/api.d.ts
+@@ -1,4 +1,4 @@
+-export type { ApiProxy, SessionsApi, SessionSearchItem, SessionSummary, PromptContentPart, HostApi, EventsApi, MuxFrame, HostFrame, ApprovalResponsePayload, QuestionResponsePayload, HistoryEntry, ToolEventView, DirectoryEntry, DirectoryListing, ResponseValue, WorkspaceApi, WorkspaceId, WorkspaceView, SkillsApi, SkillEntry, ModelCatalogFailure, ModelCatalogModel, ModelProviderGroup, ModelReasoning, ModelReasoningEffort, ModelSelection, QueueAction, QueuedInboxItem, SessionModels, GoalsApi, GoalRef, SettingsApi, SettingsNamespaceView, SettingsPathOpView, SettingsSecretView, CredentialsApi, CredentialView, ConfigurableProviderView, DiscoveredModelView, LlmApi, SubagentsApi, SubagentAddress, SubagentCatalog, SubagentListEntry, SubagentPromptReceipt, JobView, } from '@deepseek-ai/dsh-host-apiproxy/api';
++export type { ApiProxy, SessionsApi, SessionSearchItem, SessionSummary, PromptContentPart, HostApi, EventsApi, MuxFrame, HostFrame, ApprovalResponsePayload, QuestionResponsePayload, HistoryEntry, ToolEventView, DirectoryEntry, DirectoryListing, ResponseValue, WorkspaceApi, WorkspaceId, WorkspaceView, SkillsApi, SkillEntry, ModelCatalogFailure, ModelCatalogModel, ModelPolicyFastState, ModelProviderGroup, ModelReasoning, ModelReasoningEffort, ModelSelection, QueueAction, QueuedInboxItem, SessionModels, GoalsApi, GoalRef, SettingsApi, SettingsNamespaceView, SettingsPathOpView, SettingsSecretView, CredentialsApi, CredentialView, ConfigurableProviderView, DiscoveredModelView, LlmApi, SubagentsApi, SubagentAddress, SubagentCatalog, SubagentListEntry, SubagentPromptReceipt, JobView, } from '@deepseek-ai/dsh-host-apiproxy/api';
+ export type { ToolCallView, ToolResultView } from '@deepseek-ai/dsh-tools/presentation';
+ export type { RpcRequest, RpcResponse, RpcResult, RpcError, RpcErrorCode, ClientRequest, ServerResponse, ServerRequest, ClientResponse, RpcMessage, RpcReceipt, } from '@deepseek-ai/dsh-host-apiproxy/api';
+ export { RpcId, SESSION_SEARCH_RESULT_LIMIT, transportError, } from '@deepseek-ai/dsh-host-apiproxy/api';
+diff --git a/lib/types/client/index.d.ts b/lib/types/client/index.d.ts
+index 66def88855..25fd5ebf59 100644
+--- a/lib/types/client/index.d.ts
++++ b/lib/types/client/index.d.ts
+@@ -7,7 +7,7 @@ import type { Context } from '@deepseek-ai/cordis';
+ import type { HostDescription, IApiClient } from './api.ts';
+ import { type ConnectionConfig, type ConnectionSinks, type ConnectionState } from './connection.ts';
+ import type { ClientConnectionRpc } from '../rpc.ts';
+-export type { ApiProxy, SessionsApi, SessionSearchItem, SessionSummary, PromptContentPart, HostApi, EventsApi, MuxFrame, HostFrame, ApprovalResponsePayload, QuestionResponsePayload, HistoryEntry, ToolEventView, DirectoryEntry, DirectoryListing, ToolCallView, ToolResultView, WorkspaceApi, WorkspaceId, WorkspaceView, SkillsApi, SkillEntry, ModelCatalogFailure, ModelCatalogModel, ModelProviderGroup, ModelReasoning, MessageId, ModelReasoningEffort, ModelSelection, QueueAction, QueuedInboxItem, SessionModels, SubagentsApi, SubagentAddress, SubagentCatalog, SubagentListEntry, SubagentPromptReceipt, JobView, RpcRequest, RpcResponse, RpcResult, RpcError, RpcErrorCode, ClientRequest, ServerResponse, ServerRequest, ClientResponse, RpcMessage, RpcReceipt, HostDescription, IApiClient, SessionId, SessionEvent, ContentBlock, StreamChunk, GoalsApi, GoalRef, SettingsApi, SettingsNamespaceView, SettingsPathOpView, SettingsSecretView, CredentialsApi, CredentialView, ConfigurableProviderView, DiscoveredModelView, LlmApi, } from './api.ts';
++export type { ApiProxy, SessionsApi, SessionSearchItem, SessionSummary, PromptContentPart, HostApi, EventsApi, MuxFrame, HostFrame, ApprovalResponsePayload, QuestionResponsePayload, HistoryEntry, ToolEventView, DirectoryEntry, DirectoryListing, ToolCallView, ToolResultView, WorkspaceApi, WorkspaceId, WorkspaceView, SkillsApi, SkillEntry, ModelCatalogFailure, ModelCatalogModel, ModelPolicyFastState, ModelProviderGroup, ModelReasoning, MessageId, ModelReasoningEffort, ModelSelection, QueueAction, QueuedInboxItem, SessionModels, SubagentsApi, SubagentAddress, SubagentCatalog, SubagentListEntry, SubagentPromptReceipt, JobView, RpcRequest, RpcResponse, RpcResult, RpcError, RpcErrorCode, ClientRequest, ServerResponse, ServerRequest, ClientResponse, RpcMessage, RpcReceipt, HostDescription, IApiClient, SessionId, SessionEvent, ContentBlock, StreamChunk, GoalsApi, GoalRef, SettingsApi, SettingsNamespaceView, SettingsPathOpView, SettingsSecretView, CredentialsApi, CredentialView, ConfigurableProviderView, DiscoveredModelView, LlmApi, } from './api.ts';
+ export { RpcId, AbstractApiClient, transportError, } from './api.ts';
+ export type { ConnectionConfig, ConnectionSinks, ConnectionState };
+ export type { ClientConnectionRpc } from '../rpc.ts';
+diff --git a/lib/client.js b/lib/client.js
+index 3e4ae0eeff..c10d9578ae 100644
+--- a/lib/client.js
++++ b/lib/client.js
+@@ -5301,6 +5301,11 @@ Set the `cycles` parameter to `"ref"` to resolve cyclical schemas with defs.
+ 			model: string().min(1),
+ 			reasoningEffort: string().min(1).optional()
+ 		});
++		/** Optional Fast-mode state contributed by the logical model policy plugin. */
++		const modelPolicyFastStateSchema = object({
++			active: boolean(),
++			available: boolean()
++		});
+ 		/** Exact-model reasoning metadata. */
+ 		const modelReasoningSchema = object({
+ 			efforts: array(object({
+@@ -5315,7 +5320,8 @@ Set the `cycles` parameter to `"ref"` to resolve cyclical schemas with defs.
+ 			id: string().min(1),
+ 			name: string().min(1),
+ 			description: string().optional(),
+-			reasoning: modelReasoningSchema.optional()
++			reasoning: modelReasoningSchema.optional(),
++			supportsFast: boolean().optional()
+ 		});
+ 		/** One successfully loaded provider group. */
+ 		const modelProviderGroupSchema = object({
+@@ -5377,6 +5383,7 @@ Set the `cycles` parameter to `"ref"` to resolve cyclical schemas with defs.
+ 		/** session.models response value. */
+ 		const sessionModelsValueSchema = object({
+ 			current: modelSelectionSchema,
++			fast: modelPolicyFastStateSchema.optional(),
+ 			routable: boolean(),
+ 			groups: array(modelProviderGroupSchema),
+ 			failures: array(modelCatalogFailureSchema)
+@@ -5385,10 +5392,14 @@ Set the `cycles` parameter to `"ref"` to resolve cyclical schemas with defs.
+ 			sessionId: sessionIdSchema,
+ 			provider: string().min(1),
+ 			model: string().min(1),
+-			reasoningEffort: string().min(1).optional()
++			reasoningEffort: string().min(1).optional(),
++			fast: boolean().optional()
+ 		});
+ 		/** session.selectModel response value. */
+-		const sessionSelectModelValueSchema = object({ selected: modelSelectionSchema });
++		const sessionSelectModelValueSchema = object({
++			selected: modelSelectionSchema,
++			fast: modelPolicyFastStateSchema.optional()
++		});
+ 		/** ContentBlock passthrough: core is merge-extensible — the type discriminant envelope is strict, the rest stays wide. */
+ 		const contentBlockSchema = looseObject({ type: string() });
+ 		/** Raster image media types accepted by the version-one browser wire. */

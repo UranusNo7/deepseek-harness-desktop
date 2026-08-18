@@ -43,6 +43,22 @@ dsh plugin update
 
 An explicit `--profile <name>` always wins. Restart DSH Desktop after plugin changes so the new bundle enters the Loader composition.
 
+### Built-in Firecrawl Web provider
+
+Starting with 2.0.3, the Windows and macOS installers include `@uranusno7/dsh-web-fetch-firecrawl`; it no longer needs to be installed manually into a profile. The Desktop-owned composition disables `web-search-deepseek` and selects Firecrawl for both `web_search` and `web_fetch`. It stores only credential reference names such as `FIRECRAWL_API_KEY`, never an API key value in the installer or profile patch.
+
+Select the `standard-firecrawl` preset to keep every standard-mode tool while enabling both `web_search` and `web_fetch`. Provide `FIRECRAWL_API_KEY` through DSH credentials or the launch environment before use.
+
+After upgrading, Desktop automatically handles the old `insert: web-fetch-firecrawl` block in `$DSH_HOME/profiles/desktop/cordis.patch.yml` by converting it into an override of the built-in row, so the profile does not need to be edited before the next launch. Keep existing credentials and other provider configuration; the old insert can be removed later, but it is not a startup prerequisite.
+
+### Logical models and Fast
+
+The desktop runtime also supports an optional cross-provider logical model policy. The desktop base patch only carries `@deepseek-ai/dsh-llm-model-policy` and keeps it disabled by default; a profile enables the same `llm-model-policy` row after supplying physical provider routes and logical models. All Agent presets then share one Host model directory, selection path, and request policy instead of mounting separate rows per preset.
+
+When the policy is enabled and the selected model advertises `supportsFast: true`, the model selector shows a **Fast** switch below reasoning depth. GPT conversations created before the upgrade also receive Fast when their recorded physical provider/model exactly matches a configured policy route; existing history is not rewritten. Fast is GPT-only. Before selecting a model that does not advertise Fast, turn the switch off; the Host explicitly rejects Fast activation and requests for non-GPT models. Fast is written to the current session as a `model-policy/fast` event, so it follows session and remote history rather than living only in browser-local state.
+
+For OpenAI-compatible routes that support service tiers, Fast is sent as `service_tier: "priority"` on the Responses/compatible request. Desktop does not add `/fast`, `/fast off`, or `/fast status` commands; use the model selector switch instead. Credentials remain environment-variable references only; do not put API key values in profile patches.
+
 ## Opening the terminal
 
 Choose **Open DSH Terminal** from the tray. macOS opens Terminal; Windows prefers Windows Terminal and falls back to PowerShell or Command Prompt when it is unavailable.

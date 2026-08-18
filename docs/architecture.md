@@ -36,8 +36,9 @@ flowchart LR
 - **Desktop Host**：窗口、托盘、profile、终端、更新，以及对第三方开放的两个 service。
 - **Web Client**：官方 Web UI 和第三方浏览器界面。它通过 loopback carrier 工作，不直接调用 Electron。
 - **Native runtime**：Electron BrowserWindow、系统托盘、文件/网络/安装器适配。`desktopRuntime` 只供 Desktop 自有 row 使用。
+- **Logical model policy**：可由 profile 启用的共享 Host row，负责跨 provider 逻辑模型路由、目录元数据和 session 级 Fast 状态。UI 的 model selector、Host `session.models`/`session.selectModel` RPC 和 Agent request waterfall 都读取同一份策略；`model-policy/fast` 事件进入 session history，OpenAI-compatible Fast 请求在 pi-ai 层映射为 `service_tier: "priority"`。
 
-兼容模式的 Client face 校验环境后直接返回，不注册 Desktop layout、root、sidebar 或 conversation override。高级模式才安装 Desktop-owned layout、frame 和原生材质，同时尊重上游和第三方 slot 组合。
+兼容模式的 Client face 校验环境后直接返回，不注册 Desktop layout、root、sidebar 或 conversation override。高级模式才安装 Desktop-owned layout、frame 和原生材质，同时尊重上游和第三方 slot 组合。逻辑模型策略不依赖高级模式，属于正常 Host/profile 组合。
 
 ## Profile 与服务边界
 

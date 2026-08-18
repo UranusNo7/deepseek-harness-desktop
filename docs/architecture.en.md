@@ -36,8 +36,9 @@ Every profile or mode switch disposes the current generation before starting the
 - **Desktop Host** owns the window, tray, profiles, terminal, updates, and the two public Desktop services.
 - **Web Client** contains the official Web UI and third-party browser contributions. It works over the loopback carrier and does not call Electron directly.
 - **Native runtime** adapts Electron BrowserWindow, the tray, filesystem/network operations, and installers. `desktopRuntime` is for Desktop-owned rows only.
+- **Logical model policy** is a profile-enabled shared Host row for cross-provider logical routing, catalog metadata, and session-local Fast state. The model selector, Host `session.models`/`session.selectModel` RPCs, and the Agent request waterfall read the same policy; `model-policy/fast` enters session history, and pi-ai maps Fast on OpenAI-compatible requests to `service_tier: "priority"`.
 
-Compatibility mode validates its environment and returns without installing a Desktop layout, root, sidebar, or conversation override. Advanced mode installs the Desktop-owned layout, frame, and native materials while respecting upstream and third-party slot composition.
+Compatibility mode validates its environment and returns without installing a Desktop layout, root, sidebar, or conversation override. Advanced mode installs the Desktop-owned layout, frame, and native materials while respecting upstream and third-party slot composition. The logical model policy is independent of Advanced mode and belongs to the normal Host/profile composition.
 
 ## Profile and service boundaries
 

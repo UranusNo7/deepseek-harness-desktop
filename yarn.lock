@@ -2709,7 +2709,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@deepseek-ai/dsh-session@npm:0.1.0-rc.8, @deepseek-ai/dsh-session@npm:^0.1.0-rc.8":
+"@deepseek-ai/dsh-session@npm:0.1.0-rc.8":
   version: 0.1.0-rc.8
   resolution: "@deepseek-ai/dsh-session@npm:0.1.0-rc.8"
   peerDependencies:
@@ -2720,6 +2720,34 @@ __metadata:
     "@deepseek-ai/dsh-scope": ^0.1.0-rc.8
     "@deepseek-ai/dsh-typert-protocol": ^0.1.0-rc.8
   checksum: 10c0/afb3002491fb7511a1b1f0d44c73bba77ad6ea497f9a777209db0dff160e2c6f243270aaf3c5f811be20214aa3129762feea4a79cf404aef7ac5297d88be6ce3
+  languageName: node
+  linkType: hard
+
+"@deepseek-ai/dsh-session@patch:@deepseek-ai/dsh-session@npm%3A0.1.0-rc.8#./patches/dsh-session@0.1.0-rc.8.patch::locator=deepseek-harness-desktop%40workspace%3A.":
+  version: 0.1.0-rc.8
+  resolution: "@deepseek-ai/dsh-session@patch:@deepseek-ai/dsh-session@npm%3A0.1.0-rc.8#./patches/dsh-session@0.1.0-rc.8.patch::version=0.1.0-rc.8&hash=313a1c&locator=deepseek-harness-desktop%40workspace%3A."
+  peerDependencies:
+    "@deepseek-ai/cordis": ^4.0.1
+    "@deepseek-ai/dsh-brand": ^0.1.0-rc.8
+    "@deepseek-ai/dsh-invariants": ^0.1.0-rc.8
+    "@deepseek-ai/dsh-llm": ^0.1.0-rc.8
+    "@deepseek-ai/dsh-scope": ^0.1.0-rc.8
+    "@deepseek-ai/dsh-typert-protocol": ^0.1.0-rc.8
+  checksum: 10c0/beb2a9eb292e166ecceacb53ca0d22a06e70ad2fa9590255a9bd821ace5e61b10824b884eeb11ed3aea5946f72cc81c438817086e637257cc34358420ffc5e04
+  languageName: node
+  linkType: hard
+
+"@deepseek-ai/dsh-session@patch:@deepseek-ai/dsh-session@npm%3A0.1.0-rc.8#~/.yarn/patches/@deepseek-ai-dsh-session-npm-0.1.0-rc.8-21ccff0e0d.patch":
+  version: 0.1.0-rc.8
+  resolution: "@deepseek-ai/dsh-session@patch:@deepseek-ai/dsh-session@npm%3A0.1.0-rc.8#~/.yarn/patches/@deepseek-ai-dsh-session-npm-0.1.0-rc.8-21ccff0e0d.patch::version=0.1.0-rc.8&hash=313a1c"
+  peerDependencies:
+    "@deepseek-ai/cordis": ^4.0.1
+    "@deepseek-ai/dsh-brand": ^0.1.0-rc.8
+    "@deepseek-ai/dsh-invariants": ^0.1.0-rc.8
+    "@deepseek-ai/dsh-llm": ^0.1.0-rc.8
+    "@deepseek-ai/dsh-scope": ^0.1.0-rc.8
+    "@deepseek-ai/dsh-typert-protocol": ^0.1.0-rc.8
+  checksum: 10c0/beb2a9eb292e166ecceacb53ca0d22a06e70ad2fa9590255a9bd821ace5e61b10824b884eeb11ed3aea5946f72cc81c438817086e637257cc34358420ffc5e04
   languageName: node
   linkType: hard
 
@@ -6786,7 +6814,7 @@ __metadata:
     "@deepseek-ai/dsh-sandbox-policy": "npm:0.1.0-rc.8"
     "@deepseek-ai/dsh-sandbox-windows-acl": "npm:0.1.0-rc.8"
     "@deepseek-ai/dsh-scope": "npm:0.1.0-rc.8"
-    "@deepseek-ai/dsh-session": "npm:0.1.0-rc.8"
+    "@deepseek-ai/dsh-session": "patch:@deepseek-ai/dsh-session@npm%3A0.1.0-rc.8#~/.yarn/patches/@deepseek-ai-dsh-session-npm-0.1.0-rc.8-21ccff0e0d.patch"
     "@deepseek-ai/dsh-session-persistence": "npm:0.1.0-rc.8"
     "@deepseek-ai/dsh-session-projection": "npm:0.1.0-rc.8"
     "@deepseek-ai/dsh-session-query": "npm:0.1.0-rc.8"

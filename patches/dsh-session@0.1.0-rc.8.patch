@@ -1,0 +1,38 @@
+diff --git a/lib/index.js b/lib/index.js
+index 62fd0fe17593f5b2d52b8a792add164e1f16a4d1..39d0fbeb2f18b4c005eeefd1ef2dc78c3af6e4b0 100644
+--- a/lib/index.js
++++ b/lib/index.js
+@@ -1065,12 +1065,14 @@ const KNOWN_SESSION_EVENT_TYPES = new Set([
+ 	"compaction/prune",
+ 	"compaction/start",
+ 	"compaction/summary",
++	"fast/mode",
+ 	"feedback/record",
+ 	"goal/change",
+ 	"hook/invoked",
+ 	"hook/result",
+ 	"llm/retry",
+ 	"llm/retry-started",
++	"model-policy/fast",
+ 	"permission/preset",
+ 	"plan/mode",
+ 	"request/context",
+diff --git a/lib/types/known-event-types.js b/lib/types/known-event-types.js
+index 31c5e25a6c35481fa69aa9142cd0d4808ac2480f..97edc8848c3ac46513e3cdd415c8ab769fdd3f95 100644
+--- a/lib/types/known-event-types.js
++++ b/lib/types/known-event-types.js
+@@ -29,12 +29,14 @@ export const KNOWN_SESSION_EVENT_TYPES = new Set([
+     'compaction/prune',
+     'compaction/start',
+     'compaction/summary',
++    'fast/mode',
+     'feedback/record',
+     'goal/change',
+     'hook/invoked',
+     'hook/result',
+     'llm/retry',
+     'llm/retry-started',
++    'model-policy/fast',
+     'permission/preset',
+     'plan/mode',
+     'request/context',

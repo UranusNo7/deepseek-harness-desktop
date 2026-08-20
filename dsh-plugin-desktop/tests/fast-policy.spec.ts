@@ -49,4 +49,24 @@ describe('desktop Fast via upstream dsh-fast', () => {
     expect(ctx.get('fast')).toBeDefined()
     await ctx.fiber.dispose()
   })
+
+  it('handles /fast on via commands.execute', async () => {
+    const ctx = new Context()
+    await ctx.plugin(SessionStore)
+    await ctx.plugin(LlmRuntime)
+    const Commands = (await import('@deepseek-ai/dsh-commands')).default
+    await ctx.plugin(Commands)
+    await ctx.plugin(Fast as unknown as Parameters<Context['plugin']>[0])
+    const session = ctx.sessions.create(SessionId('fast-cmd-on'))
+    const agent = { id: session.id, session, ctx } as unknown as { session: typeof session; ctx: Context; commands: unknown }
+    const list = (ctx.commands as unknown as { list: (a: unknown) => { name: string }[] }).list(agent)
+    expect(list.map(c => c.name)).toContain('fast')
+    const exec = await (ctx.commands as unknown as { execute: (a: unknown, line: string, imgs: unknown[], sig: AbortSignal) => Promise<{ result: { kind: string; text?: string } } | undefined> }).execute(agent, '/fast on', [], new AbortController().signal)
+    expect(exec?.result.kind).toBe('success')
+    expect(exec?.result.text).toContain('enabled')
+    expect(Fast.foldFastMode(session.events)).toBe(true)
+    const exec2 = await (ctx.commands as unknown as { execute: (a: unknown, line: string, imgs: unknown[], sig: AbortSignal) => Promise<{ result: { kind: string; text?: string } } | undefined> }).execute(agent, '/fast on', [], new AbortController().signal)
+    expect(exec2?.result.text).toContain('already enabled')
+    await ctx.fiber.dispose()
+  })
 })

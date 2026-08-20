@@ -1,7 +1,7 @@
 import { FAST_EVENT, LEGACY_FAST_EVENT, foldFastMode } from "./fast.js";
 //#region src/index.ts
 const name = "fast";
-const inject = ["llm"];
+const inject = ["llm", "commands"];
 function isAvailableForModel(model) {
 	return model?.supportsFast === true;
 }
@@ -45,11 +45,13 @@ async function requestWithFastMode(agent, next) {
 * @param ctx - Cordis context carrying `llm` and `sessions`.
 */
 function apply(ctx) {
+	console.log("[dsh-fast] apply, has commands", !!(ctx.get?.("commands")));
 	const controller = makeController(ctx);
 	ctx.provide("fast", controller);
 	ctx.effect(() => ctx.on("agent/request", ({ agent }, next) => requestWithFastMode(agent, next)), "fast: tier injection");
-	const commands = ctx.get?.("commands");
-	if (commands !== void 0) ctx.effect(function* () {
+	ctx.effect(function* () {
+		const commands = ctx.get?.("commands");
+		if (commands === void 0) return;
 		yield commands.register({
 			name: "fast",
 			description: "Toggle Fast mode (usage: /fast [on|off|status])",

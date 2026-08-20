@@ -103,12 +103,12 @@ export function apply(ctx: Context): void {
 
   // Human command is optional: the plugin works without it, but when
   // `ctx.commands` is composed the user can toggle Fast without the UI.
-  const commands = (ctx as unknown as { get: (name: string) => unknown }).get?.('commands') as
-    | { register: (def: { name: string; description: string; handler: (inv: CommandInvocation) => Promise<CommandResult> }) => () => void }
-    | undefined
-  if (commands !== undefined) {
-    ctx.effect(function* () {
-      yield commands.register({
+  ctx.effect(function* () {
+    const commands = (ctx as unknown as { get: (name: string) => unknown }).get?.('commands') as
+      | { register: (def: { name: string; description: string; handler: (inv: CommandInvocation) => Promise<CommandResult> }) => () => void }
+      | undefined
+    if (commands === undefined) return
+    yield commands.register({
         name: 'fast',
         description: 'Toggle Fast mode (usage: /fast [on|off|status])',
         handler: async (invocation: CommandInvocation): Promise<CommandResult> => {
@@ -141,5 +141,4 @@ export function apply(ctx: Context): void {
         },
       })
     }, 'fast: /fast command')
-  }
 }

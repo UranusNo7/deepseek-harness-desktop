@@ -274,3 +274,41 @@
 - `yarn.lock`：移除 `dsh-codex-model-policy` 的 `71c8ed` 条目。
 - 思考深度与上下文窗口：`codex` 移除后，`reasoningEffort` 与 `contextWindow`/`maxTokens` 改由物理 `dsh-llm-pi-ai` 的 `providers[].models[]` 直接配置（用户已在 `opencode-go1` 的 `muse-spark` 上配置 `1048576`/`131072`），无需逻辑层。
 - 回滚点：`git revert HEAD` 即可恢复 `codex`，或 `git checkout HEAD~1 -- dsh-plugin-desktop/cordis.patch.yml dsh-plugin-desktop/package.json dsh-plugin-desktop/scripts/verify-packaged-runtime.ts dsh-plugin-desktop/src/profile.ts dsh-plugin-desktop/tests/ yarn.lock` 并 `git checkout HEAD~1 -- dsh-plugin-desktop/vendor/dsh-codex-model-policy`，不要改写用户 `$DSH_HOME`。
+
+## 2026-08-21 - Task: 修复旧会话 `SessionFormatUnsupportedError: model-policy/fast` 并启用 `/fast` 独立插件
+
+### What was done
+
+- 诊断 `session-fd2c52a5...`（`seq 108925 model-policy/fast`）被 `0.1.0-rc.8` 的 `KNOWN_SESSION_EVENT_TYPES` 拒绝：`rc.8` 发布物不含 `fast/mode`/`model-policy/fast`，而会话由 `b3ab3d`（含 `dsh-fast`）写入，属“新日志被旧读器”保护性拒绝，非损坏。
+- `dsh-plugin-desktop/cordis.patch.yml` 新增 `insert: fast  name: '@deepseek-ai/dsh-fast'`（会话级 `fast/mode`，兼容旧 `model-policy/fast`，`pi-ai` 映射 `service_tier: priority`）。
+- `deepseek-harness/packages/llm/fast/src/index.ts` 与 `dsh-plugin-desktop/vendor/dsh-fast/src/index.ts` 修复 `commands` 竞态：`inject ['llm'] -> ['llm','commands']`，`commands` 获取与 `register` 移入 `ctx.effect` 内判空，避免 `apply` 时 `commands` 未就绪导致 `/fast` 不出现在补全。
+- `patches/dsh-session@0.1.0-rc.8.patch` 新增：`fast/mode`/`model-policy/fast` 进 `KNOWN_SESSION_EVENT_TYPES`（`lib/index.js` 单行 Set 与 `lib/types/known-event-types.js` 双行），`package.json` `resolutions` 同时固定 `0.1.0-rc.8`/`^0.1.0-rc.8`，`healProfilesModuleFallback` 重链 `profiles/node_modules/@deepseek-ai/dsh-fast` 到 `vendor`。
+- `deepseek-harness` 子模块 `packages/llm/fast` 提交 `c0ca0e4 fix(fast): wait for commands service before registering /fast` 并推送到重命名后的上游 `https://github.com/UranusNo7/dsh-fast.git`（原 `dsh-codex-model-policy` 已 `PATCH /repos/... -f name=dsh-fast`），`upstream.json` 同步 `repository` 与 `commit` 到 `c0ca0e4`。
+- `dsh-plugin-desktop/tests/package.spec.ts` 同步新 `resolutions` 预期（`dsh-session` 两条），`profile.spec` 的 `sandbox-local` 判空兼容 `nmHoistingLimits: workspaces` 未提升场景；`fast-policy.spec.ts` 新增 `commands.execute('/fast on')` 成功断言。
+- `README.md`/`README.en.md` 重写：子模块 `rc.6 -> rc.8 + dsh-fast c0ca0e4`，模型能力 `llm-model-policy` -> `dsh-fast` 的 `fast/mode` + `/fast`，`Desktop 额外做` 同步 `patches/dsh-session`，首位友情链接加入 `dsh-fast`。
+
+### Testing
+
+- `C:\Users\UranusNo7\.dsh\sessions\--D-python_code-deepseek-harness-desktop--\session-fd2c52a5...\session.jsonl.zstd` 解压 20140 行，明文 `fast` 相关 306 行（`model-policy/fast 265` + `fast/mode 69`），`header.version 0`，`inspect` 前 `unknown required` 为 `model-policy/fast seq 108925`。
+- 热补 `D:\DSHDesktop\...\resources\app.asar.unpacked\node_modules\@deepseek-ai\dsh-session` 两处 `Set` 后，`node -e` 验证 `KNOWN_SESSION_EVENT_TYPES.has('fast/mode') && has('model-policy/fast') === true`（工作区与已安装版均 50 项）。
+- `corepack yarn install`：通过（`dsh-session` 补丁哈希 `313a1c`，`YN0086` peer warning 保留）。
+- `corepack yarn workspace dsh-plugin-desktop build`/`typecheck`：通过。
+- `corepack yarn workspace dsh-plugin-desktop test`：通过，`32 files 295 tests`（`fast-policy` 4 tests 含 `commands.execute('/fast on') -> success`，`package.spec` 15 tests 含 `fast` 插入与 `resolutions`，`profile.spec` 19 tests 含 `drops the logical model policy`）。
+- `node -e` 验证 `prepareDesktopProfile(..., 'desktop')` 的 `patches` 含 `insert:fast`，`composeEntries` 后 `rows` 含 `{id:'fast', name:'@deepseek-ai/dsh-fast'}`，`profiles/node_modules/@deepseek-ai/dsh-fast` 重链到 `vendor/dsh-fast` 的已修 `lib/index.js`（`fast: /fast command`）。
+- 桌面端重启后 UI 敲 `/` 同时出现 `fast` 与 `feedback`，` /fast on -> Fast mode enabled.`、` /fast status` 成功气泡（点击与键盘 ` /fast` 均 `toggle`）。
+
+### Notes
+
+- `dsh-plugin-desktop/cordis.patch.yml`：新增 `insert: fast` 块（`# Fast mode ... owns fast/mode`）。
+- `dsh-plugin-desktop/vendor/dsh-fast/src/index.ts` + `lib/index.js`（及 `deepseek-harness/packages/llm/fast/src/index.ts` + `profiles/node_modules` 热补）：`inject` 补 `commands`，`commands` 获取移入 `effect` 内 `if (commands === void 0) return`，`console.log('[dsh-fast] apply...')` 调试后移除前已验证 `has commands true`。
+- `patches/dsh-session@0.1.0-rc.8.patch`：`62fd0fe -> 39d0fbeb`（`lib/index.js` `compaction/summary` 后加 `fast/mode`，`llm/retry-started` 后加 `model-policy/fast`）与 `31c5e25 -> 97edc884`（`known-event-types.js` 同）。
+- `package.json`：`resolutions` 新增 `dsh-session@npm:0.1.0-rc.8`/`^0.1.0-rc.8` 指向 `./patches/dsh-session@0.1.0-rc.8.patch`。
+- `deepseek-harness`：`b3ab3d10 -> c0ca0e4ba4`，`origin` 已 `set-url` 到 `https://github.com/UranusNo7/dsh-fast.git` 并 `push HEAD:main`。
+- `upstream.json`：`repository` 改 `dsh-codex-model-policy` -> `dsh-fast`，`commit` 改 `b3ab3d... -> c0ca0e4...`。
+- `dsh-plugin-desktop/tests/package.spec.ts`：`ships the Fast and pi-ai` 中 `dsh-session` 两条从 `toBeUndefined` 改 `toBeTypeOf('string')`，`starts restricted Windows shells` 对 `dsh-sandbox-local` 缺失时跳过 `sandboxLocalRequire` 断言。
+- `dsh-plugin-desktop/tests/fast-policy.spec.ts`：新增 `handles /fast on via commands.execute`。
+- `README.md`/`README.en.md`：重写，`rc.6 -> rc.8 + dsh-fast`，`llm-model-policy` -> `dsh-fast`，首表加入 `Fast /fast` 卡片与 `Fast 使用` 小节，`upstream.json` 来源改 `UranusNo7/dsh-fast`。
+- `https://github.com/UranusNo7/dsh-fast`：原 `dsh-codex-model-policy` 已重命名，`description` 改 `Pluggable Fast service-tier for DeepSeek Harness: session-scoped /fast via dsh-fast`。
+- `D:\DSHDesktop\...\resources\app.asar.unpacked`：`cordis.patch.yml`/`lib/profile.js`/`lib/index.js`/`node_modules/@deepseek-ai/dsh-fast` 已热补，`profiles/node_modules/@deepseek-ai/dsh-fast` 重链后 `lib/index.js` 含 `fast: /fast command`。
+- `.yarn/patches/@deepseek-ai-dsh-session-npm-0.1.0-rc.8-21ccff0e0d.patch`：`yarn patch-commit` 产物已复制到 `./patches/` 并保留，`yarn.lock` 同时含 `~/.yarn/patches` 与 `./patches` 两条（同哈希 `313a1c`），下次 `dedupe` 可收敛。
+- 回滚点：`git revert fb0ccec2ed`（桌面）与 `git -C deepseek-harness revert c0ca0e4ba4`（上游），删除 `patches/dsh-session@0.1.0-rc.8.patch` 并 `git checkout HEAD~1 -- upstream.json yarn.lock`，`git submodule update --init` 回 `b3ab3d`，热补的 `app.asar.unpacked` 按 `git diff` 反向应用。

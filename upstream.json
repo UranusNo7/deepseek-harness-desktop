@@ -1,6 +1,6 @@
 {
-  "repository": "https://github.com/deepseek-ai/deepseek-harness.git",
-  "commit": "47f943859bef60e4160492346772ded9b24f765a",
-  "sourceVersion": "0.1.0-rc.5",
-  "runtimePackageVersion": "0.1.0-rc.6"
+  "repository": "https://github.com/UranusNo7/dsh-codex-model-policy.git",
+  "commit": "fe4b64f1123103e93c74f9264542175a5bf03520",
+  "sourceVersion": "0.1.0-rc.8",
+  "runtimePackageVersion": "0.1.0-rc.8"
 }

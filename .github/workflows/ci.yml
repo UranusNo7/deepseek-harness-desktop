@@ -14,6 +14,7 @@ concurrency:
 
 env:
   DSH_TELEMETRY_DISABLED: '1'
+  YARN_ENABLE_IMMUTABLE_INSTALLS: 'false'
 
 jobs:
   # Full product gate: build, typecheck, unit tests, and every headless smoke.

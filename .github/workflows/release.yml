@@ -12,6 +12,7 @@ permissions:
 env:
   DSH_TELEMETRY_DISABLED: '1'
   CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+  YARN_ENABLE_IMMUTABLE_INSTALLS: 'false'
 
 jobs:
   release-windows:

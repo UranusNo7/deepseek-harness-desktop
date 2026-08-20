@@ -1,3 +1,5 @@
 dist/
 lib/
+!vendor/
+!vendor/**/lib/
 node_modules/

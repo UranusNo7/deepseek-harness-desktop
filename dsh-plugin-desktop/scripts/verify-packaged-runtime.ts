@@ -107,8 +107,6 @@ export const REQUIRED_UNPACKED_PACKAGE_SPECIFIERS = [
   '@deepseek-ai/dsh-web-app/package.json',
   '@deepseek-ai/dsh-fast',
   '@deepseek-ai/dsh-fast/package.json',
-  '@deepseek-ai/dsh-codex-model-policy',
-  '@deepseek-ai/dsh-codex-model-policy/package.json',
   '@deepseek-ai/dsh-llm-pi-ai',
   '@deepseek-ai/dsh-llm-pi-ai/package.json',
   '@uranusno7/dsh-web-fetch-firecrawl',

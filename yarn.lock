@@ -1604,7 +1604,7 @@ __metadata:
 
 "@deepseek-ai/dsh-codex-model-policy@file:vendor/dsh-codex-model-policy::locator=dsh-plugin-desktop%40workspace%3Adsh-plugin-desktop":
   version: 0.1.0-rc.5
-  resolution: "@deepseek-ai/dsh-codex-model-policy@file:vendor/dsh-codex-model-policy#vendor/dsh-codex-model-policy::hash=975bd2&locator=dsh-plugin-desktop%40workspace%3Adsh-plugin-desktop"
+  resolution: "@deepseek-ai/dsh-codex-model-policy@file:vendor/dsh-codex-model-policy#vendor/dsh-codex-model-policy::hash=71c8ed&locator=dsh-plugin-desktop%40workspace%3Adsh-plugin-desktop"
   dependencies:
     "@deepseek-ai/schemastery": "npm:^3.18.1"
   peerDependencies:
@@ -1625,7 +1625,7 @@ __metadata:
     "@deepseek-ai/dsh-session": ^0.1.0-rc.8
     clsx: ^2.1.1
     react: ^18.2.0
-  checksum: 10c0/9099f06fc4b94b5fde9d67939d8c98c5738a9de1ee473ee23309ff6440b5fd7990e40fb99ac4dca96a3764aaee10cc6e9e91e0046ac14db015c4137627443461
+  checksum: 10c0/2b0b670451a9f8277f2a0a0d1cce28282e748faa36b8faf4284a257aa187cdd384b924a568aa1e0605016c4dc85e039752adab50b940bc929043f0363189210a
   languageName: node
   linkType: hard
 
@@ -2169,7 +2169,26 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@deepseek-ai/dsh-llm-pi-ai@npm:0.1.0-rc.8, @deepseek-ai/dsh-llm-pi-ai@npm:^0.1.0-rc.8":
+"@deepseek-ai/dsh-llm-pi-ai@file:vendor/dsh-llm-pi-ai::locator=dsh-plugin-desktop%40workspace%3Adsh-plugin-desktop":
+  version: 0.1.0-rc.8
+  resolution: "@deepseek-ai/dsh-llm-pi-ai@file:vendor/dsh-llm-pi-ai#vendor/dsh-llm-pi-ai::hash=159071&locator=dsh-plugin-desktop%40workspace%3Adsh-plugin-desktop"
+  dependencies:
+    "@deepseek-ai/schemastery": "npm:^3.18.1"
+    "@earendil-works/pi-ai": "npm:^0.82.1"
+  peerDependencies:
+    "@deepseek-ai/cordis": ^4.0.1
+    "@deepseek-ai/dsh-attachment": ^0.1.0-rc.8
+    "@deepseek-ai/dsh-credentials": ^0.1.0-rc.8
+    "@deepseek-ai/dsh-invariants": ^0.1.0-rc.8
+    "@deepseek-ai/dsh-launch-environment": ^0.1.0-rc.8
+    "@deepseek-ai/dsh-llm": ^0.1.0-rc.8
+    "@deepseek-ai/dsh-settings": ^0.1.0-rc.8
+    "@deepseek-ai/dsh-timeout": ^0.1.0-rc.8
+  checksum: 10c0/e1a5e6abfc41c2c219b844dc779e641a7f96386fbc8d4079ea5cc9b586af52b6bb7b5bd29d632467ffdeeb113e39be660be6ca1ae909c955baa5b222e83a977e
+  languageName: node
+  linkType: hard
+
+"@deepseek-ai/dsh-llm-pi-ai@npm:^0.1.0-rc.8":
   version: 0.1.0-rc.8
   resolution: "@deepseek-ai/dsh-llm-pi-ai@npm:0.1.0-rc.8"
   dependencies:
@@ -6783,7 +6802,7 @@ __metadata:
     "@deepseek-ai/dsh-jobs": "npm:0.1.0-rc.8"
     "@deepseek-ai/dsh-launch-environment": "npm:0.1.0-rc.8"
     "@deepseek-ai/dsh-llm": "npm:0.1.0-rc.8"
-    "@deepseek-ai/dsh-llm-pi-ai": "npm:0.1.0-rc.8"
+    "@deepseek-ai/dsh-llm-pi-ai": "file:vendor/dsh-llm-pi-ai"
     "@deepseek-ai/dsh-llm-retry": "npm:0.1.0-rc.8"
     "@deepseek-ai/dsh-message-feedback": "npm:0.1.0-rc.8"
     "@deepseek-ai/dsh-output-retention": "npm:0.1.0-rc.8"

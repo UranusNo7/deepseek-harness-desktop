@@ -43,6 +43,7 @@ export const REQUIRED_PACKAGED_RUNTIME_ENTRIES = [
   'node_modules/@deepseek-ai/dsh/lib/bin.js',
   'node_modules/@deepseek-ai/dsh-fast/lib/index.js',
   'node_modules/@deepseek-ai/dsh-codex-model-policy/lib/index.js',
+  'node_modules/@deepseek-ai/dsh-llm-pi-ai/lib/index.js',
   'node_modules/@uranusno7/dsh-web-fetch-firecrawl/lib/index.js',
   'node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html',
   'node_modules/@deepseek-ai/dsh-app-boot/lib/index.js',
@@ -78,6 +79,8 @@ export const REQUIRED_UNPACKED_RUNTIME_ENTRIES = [
   'node_modules/@deepseek-ai/dsh-fast/lib/index.js',
   'node_modules/@deepseek-ai/dsh-codex-model-policy/package.json',
   'node_modules/@deepseek-ai/dsh-codex-model-policy/lib/index.js',
+  'node_modules/@deepseek-ai/dsh-llm-pi-ai/package.json',
+  'node_modules/@deepseek-ai/dsh-llm-pi-ai/lib/index.js',
   'node_modules/@uranusno7/dsh-web-fetch-firecrawl/package.json',
   'node_modules/@uranusno7/dsh-web-fetch-firecrawl/lib/index.js',
   'node_modules/@deepseek-ai/dsh-app-boot/lib/index.js',
@@ -89,9 +92,6 @@ export const REQUIRED_UNPACKED_RUNTIME_ENTRIES = [
 export const REQUIRED_WINDOWS_X64_NODE_PTY_ENTRIES = [
   'node_modules/node-pty/prebuilds/win32-x64/conpty.node',
   'node_modules/node-pty/prebuilds/win32-x64/conpty_console_list.node',
-  'node_modules/node-pty/prebuilds/win32-x64/pty.node',
-  'node_modules/node-pty/prebuilds/win32-x64/winpty-agent.exe',
-  'node_modules/node-pty/prebuilds/win32-x64/winpty.dll',
 ] as const
 
 /** Package exports that profile fallback links must resolve from the physical application tree. */
@@ -112,6 +112,8 @@ export const REQUIRED_UNPACKED_PACKAGE_SPECIFIERS = [
   '@deepseek-ai/dsh-fast/package.json',
   '@deepseek-ai/dsh-codex-model-policy',
   '@deepseek-ai/dsh-codex-model-policy/package.json',
+  '@deepseek-ai/dsh-llm-pi-ai',
+  '@deepseek-ai/dsh-llm-pi-ai/package.json',
   '@uranusno7/dsh-web-fetch-firecrawl',
   '@uranusno7/dsh-web-fetch-firecrawl/package.json',
 ] as const

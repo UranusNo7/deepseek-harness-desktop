@@ -1,5 +1,5 @@
 import { LlmAdapter, LlmError, ReasoningEffortId, assertUsableApiKey, contentHasImage } from "@deepseek-ai/dsh-llm";
-import { PiAiAdapter } from "@deepseek-ai/dsh-llm-pi-ai";
+import { PiAiAdapter, resolveProfiles } from "@deepseek-ai/dsh-llm-pi-ai";
 import z from "@deepseek-ai/schemastery";
 import { foldFastMode } from "@deepseek-ai/dsh-fast/fast";
 //#region ../../util/launch-environment/lib/index.js
@@ -361,8 +361,7 @@ function physicalAdapterFor(ctx, config) {
 		const key = serviceTier ?? "";
 		const existing = adapters.get(key);
 		if (existing !== void 0) return existing;
-		const providers = profilesForServiceTier(config.providers, serviceTier);
-		const profiles = new Map(Object.entries(providers));
+		const profiles = resolveProfiles(profilesForServiceTier(config.providers, serviceTier));
 		const adapter = new PiAiAdapter({
 			profiles: () => profiles,
 			resolveApiKey: async (provider, profile) => {

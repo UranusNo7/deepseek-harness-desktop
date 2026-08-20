@@ -1,6 +1,6 @@
 /** Logical cross-provider model policy plugin for DSH. */
 import { LlmError, assertUsableApiKey, } from '@deepseek-ai/dsh-llm';
-import { PiAiAdapter } from '@deepseek-ai/dsh-llm-pi-ai';
+import { PiAiAdapter, resolveProfiles } from '@deepseek-ai/dsh-llm-pi-ai';
 import { launchEnvironmentOf } from '@deepseek-ai/dsh-launch-environment';
 import { profilesForServiceTier, resolveConfig } from "./config.js";
 import { ModelPolicyAdapter } from "./adapter.js";
@@ -18,7 +18,7 @@ function physicalAdapterFor(ctx, config) {
         if (existing !== undefined)
             return existing;
         const providers = profilesForServiceTier(config.providers, serviceTier);
-        const profiles = new Map(Object.entries(providers));
+        const profiles = resolveProfiles(providers);
         const adapter = new PiAiAdapter({
             profiles: () => profiles,
             resolveApiKey: async (provider, profile) => {

@@ -6,10 +6,10 @@ window.__ModuleLoader__.load({
 		Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 		let _deepseek_ai_cordis = require("@deepseek-ai/cordis");
 		let _deepseek_ai_dsh_client_runtime_client = require("@deepseek-ai/dsh-client-runtime/client");
-		let react_jsx_runtime = require("react/jsx-runtime");
 		let react = require("react");
 		let _deepseek_ai_dsh_client_ui_primitives = require("@deepseek-ai/dsh-client-ui-primitives");
-		//#region lib/types/client/directory.js
+		let react_jsx_runtime = require("react/jsx-runtime");
+		//#region src/client/directory.ts
 		/** One session's shared directory controller; disposed with the session scope. */
 		var ModelDirectory = class {
 			sessions;
@@ -182,7 +182,7 @@ window.__ModuleLoader__.load({
 			}
 		};
 		//#endregion
-		//#region lib/types/client/service.js
+		//#region src/client/service.ts
 		/**
 		* ModelDirectoryResolver (`ctx.modelDirectories`): the root owner of per-session
 		* {@link ModelDirectory} instances. Both selection entries (the /model popup
@@ -314,7 +314,7 @@ window.__ModuleLoader__.load({
 			"warning": "sv0ekq_warning"
 		};
 		//#endregion
-		//#region lib/types/client/ModelSelect.js
+		//#region src/client/ModelSelect.tsx
 		/**
 		* ModelSelect: the composer's named model seat (`conversation.input.model`).
 		* Two-level selection per figma 496:26454's MenuDropdown: the root menu is
@@ -480,13 +480,13 @@ window.__ModuleLoader__.load({
 					itemRefs.current[at] = node;
 				};
 			};
-			return (0, react_jsx_runtime.jsxs)("div", {
+			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
 				ref: rootRef,
 				className: ModelSelect_module_css_default.root,
 				onKeyDown: onRootKeyDown,
 				onBlur,
 				children: [
-					(0, react_jsx_runtime.jsxs)("button", {
+					/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("button", {
 						ref: triggerRef,
 						type: "button",
 						className: ModelSelect_module_css_default.trigger,
@@ -501,25 +501,25 @@ window.__ModuleLoader__.load({
 							else show();
 						},
 						children: [
-							(0, react_jsx_runtime.jsx)("span", {
+							/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 								className: ModelSelect_module_css_default.triggerLabel,
 								children: modelLabel
 							}),
-							effortLabel !== void 0 && (0, react_jsx_runtime.jsx)("span", {
+							effortLabel !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 								className: ModelSelect_module_css_default.triggerEffort,
 								children: effortLabel
 							}),
-							(0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconChevronDownOutline14, { className: clsx(ModelSelect_module_css_default.chevron, open && ModelSelect_module_css_default.chevronOpen) })
+							/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconChevronDownOutline14, { className: clsx(ModelSelect_module_css_default.chevron, open && ModelSelect_module_css_default.chevronOpen) })
 						]
 					}),
-					open && (0, react_jsx_runtime.jsxs)("div", {
+					open && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
 						id: `${id}-menu`,
 						className: ModelSelect_module_css_default.menu,
 						role: "menu",
 						"aria-label": t("menu.aria"),
 						"aria-busy": state.status === "loading" || busy,
 						children: [
-							pane === "root" && (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [(0, react_jsx_runtime.jsxs)("button", {
+							pane === "root" && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("button", {
 								ref: itemRef(),
 								type: "button",
 								role: "menuitem",
@@ -528,17 +528,17 @@ window.__ModuleLoader__.load({
 									setPane("model");
 								},
 								children: [
-									(0, react_jsx_runtime.jsx)("span", {
+									/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 										className: ModelSelect_module_css_default.cellLabel,
 										children: t("menu.model")
 									}),
-									(0, react_jsx_runtime.jsx)("span", {
+									/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 										className: ModelSelect_module_css_default.cellValue,
 										children: modelLabel
 									}),
-									(0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconChevronRightOutline14, { className: ModelSelect_module_css_default.cellChevron })
+									/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconChevronRightOutline14, { className: ModelSelect_module_css_default.cellChevron })
 								]
-							}), reasoning !== void 0 && (0, react_jsx_runtime.jsxs)("button", {
+							}), reasoning !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("button", {
 								ref: itemRef(),
 								type: "button",
 								role: "menuitem",
@@ -547,58 +547,58 @@ window.__ModuleLoader__.load({
 									setPane("effort");
 								},
 								children: [
-									(0, react_jsx_runtime.jsx)("span", {
+									/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 										className: ModelSelect_module_css_default.cellLabel,
 										children: t("menu.effort")
 									}),
-									(0, react_jsx_runtime.jsx)("span", {
+									/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 										className: ModelSelect_module_css_default.cellValue,
 										children: effortLabel
 									}),
-									(0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconChevronRightOutline14, { className: ModelSelect_module_css_default.cellChevron })
+									/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconChevronRightOutline14, { className: ModelSelect_module_css_default.cellChevron })
 								]
 							})] }),
-							pane === "model" && (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [
-								state.status === "loading" && (0, react_jsx_runtime.jsx)("div", {
+							pane === "model" && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [
+								state.status === "loading" && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
 									className: ModelSelect_module_css_default.status,
 									children: t("status.loading")
 								}),
-								state.error !== null && lastActionRef.current === "load" && (0, react_jsx_runtime.jsxs)("div", {
+								state.error !== null && lastActionRef.current === "load" && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
 									className: ModelSelect_module_css_default.error,
-									children: [(0, react_jsx_runtime.jsx)("span", { children: t("error.action", { message: state.error }) }), (0, react_jsx_runtime.jsx)("button", {
+									children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", { children: t("error.action", { message: state.error }) }), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
 										type: "button",
 										className: ModelSelect_module_css_default.retry,
 										onClick: reload,
 										children: t("retry")
 									})]
 								}),
-								state.failures.map((failure) => (0, react_jsx_runtime.jsxs)("div", {
+								state.failures.map((failure) => /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
 									className: ModelSelect_module_css_default.warning,
-									children: [(0, react_jsx_runtime.jsx)("span", { children: t("warning.groupLoad", {
+									children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", { children: t("warning.groupLoad", {
 										name: failure.name,
 										message: failure.message
-									}) }), (0, react_jsx_runtime.jsx)("button", {
+									}) }), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
 										type: "button",
 										className: ModelSelect_module_css_default.retry,
 										onClick: reload,
 										children: t("retry")
 									})]
 								}, failure.id)),
-								(0, react_jsx_runtime.jsx)("div", {
+								/* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
 									className: clsx(ModelSelect_module_css_default.groups, "scrollable"),
 									children: state.groups.map((group) => {
 										const headingId = `${id}-${group.id}`;
-										return (0, react_jsx_runtime.jsxs)("section", {
+										return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("section", {
 											role: "group",
 											"aria-labelledby": headingId,
 											className: ModelSelect_module_css_default.group,
-											children: [(0, react_jsx_runtime.jsx)("div", {
+											children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
 												className: ModelSelect_module_css_default.groupTitle,
 												id: headingId,
 												children: group.name
 											}), group.models.map((model) => {
 												const selected = state.current?.provider === group.id && state.current.model === model.id;
-												return (0, react_jsx_runtime.jsxs)("button", {
+												return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("button", {
 													ref: itemRef(),
 													type: "button",
 													role: "menuitemradio",
@@ -612,43 +612,43 @@ window.__ModuleLoader__.load({
 															model: model.id
 														});
 													},
-													children: [(0, react_jsx_runtime.jsxs)("span", {
+													children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
 														className: ModelSelect_module_css_default.optionCopy,
-														children: [(0, react_jsx_runtime.jsx)("span", {
+														children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 															className: ModelSelect_module_css_default.modelName,
 															children: model.name
-														}), model.description !== void 0 && (0, react_jsx_runtime.jsx)("span", {
+														}), model.description !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 															className: ModelSelect_module_css_default.description,
 															children: model.description
 														})]
-													}), (0, react_jsx_runtime.jsx)("span", {
+													}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 														className: ModelSelect_module_css_default.check,
-														children: selected ? (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconCheckOutline16, {}) : null
+														children: selected ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconCheckOutline16, {}) : null
 													})]
 												}, model.id);
 											})]
 										}, group.id);
 									})
 								}),
-								state.status === "ready" && choices.length === 0 && (0, react_jsx_runtime.jsx)("div", {
+								state.status === "ready" && choices.length === 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
 									className: ModelSelect_module_css_default.empty,
 									children: t("empty.models")
 								})
 							] }),
-							pane === "effort" && (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [
-								state.error !== null && lastActionRef.current === "load" && (0, react_jsx_runtime.jsxs)("div", {
+							pane === "effort" && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [
+								state.error !== null && lastActionRef.current === "load" && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
 									className: ModelSelect_module_css_default.error,
-									children: [(0, react_jsx_runtime.jsx)("span", { children: t("error.action", { message: state.error }) }), (0, react_jsx_runtime.jsx)("button", {
+									children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", { children: t("error.action", { message: state.error }) }), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
 										type: "button",
 										className: ModelSelect_module_css_default.retry,
 										onClick: reload,
 										children: t("action.reload")
 									})]
 								}),
-								effortChoices.length === 0 ? (0, react_jsx_runtime.jsx)("div", {
+								effortChoices.length === 0 ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
 									className: ModelSelect_module_css_default.empty,
 									children: t("empty.efforts")
-								}) : effortChoices.map((level) => (0, react_jsx_runtime.jsxs)("button", {
+								}) : effortChoices.map((level) => /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("button", {
 									ref: itemRef(),
 									type: "button",
 									role: "menuitemradio",
@@ -658,21 +658,21 @@ window.__ModuleLoader__.load({
 									onClick: () => {
 										chooseEffort(level.effort);
 									},
-									children: [(0, react_jsx_runtime.jsxs)("span", {
+									children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
 										className: ModelSelect_module_css_default.optionCopy,
-										children: [(0, react_jsx_runtime.jsx)("span", {
+										children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 											className: ModelSelect_module_css_default.modelName,
 											children: level.label
-										}), level.description !== void 0 && (0, react_jsx_runtime.jsx)("span", {
+										}), level.description !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 											className: ModelSelect_module_css_default.description,
 											children: level.description
 										})]
-									}), (0, react_jsx_runtime.jsx)("span", {
+									}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 										className: ModelSelect_module_css_default.check,
-										children: effectiveEffort === level.effort ? (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconCheckOutline16, {}) : null
+										children: effectiveEffort === level.effort ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconCheckOutline16, {}) : null
 									})]
 								}, level.key)),
-								(state.fast?.available === true || state.fast?.active === true) && (0, react_jsx_runtime.jsxs)("button", {
+								(state.fast?.available === true || state.fast?.active === true) && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("button", {
 									ref: itemRef(),
 									type: "button",
 									role: "menuitemcheckbox",
@@ -681,26 +681,26 @@ window.__ModuleLoader__.load({
 									className: ModelSelect_module_css_default.fast,
 									disabled: busy,
 									onClick: chooseFast,
-									children: [(0, react_jsx_runtime.jsxs)("span", {
+									children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
 										className: ModelSelect_module_css_default.optionCopy,
-										children: [(0, react_jsx_runtime.jsx)("span", {
+										children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 											className: ModelSelect_module_css_default.modelName,
 											children: t("fast.label")
-										}), (0, react_jsx_runtime.jsx)("span", {
+										}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 											className: ModelSelect_module_css_default.description,
 											children: t(state.fast.active ? "fast.stateOn" : "fast.stateOff")
 										})]
-									}), (0, react_jsx_runtime.jsx)("span", {
+									}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 										className: ModelSelect_module_css_default.check,
-										children: state.fast.active ? (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconCheckOutline16, {}) : null
+										children: state.fast.active ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconCheckOutline16, {}) : null
 									})]
 								})
 							] })
 						]
 					}),
-					toast !== null && (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Toast, {
+					toast !== null && /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Toast, {
 						text: toast.text,
-						icon: (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconWarningOutline16, {}),
+						icon: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconWarningOutline16, {}),
 						anchor: rootRef.current?.closest("[data-composer-card]") ?? null,
 						onDone: () => {
 							setToast(null);
@@ -710,7 +710,7 @@ window.__ModuleLoader__.load({
 			});
 		}
 		//#endregion
-		//#region lib/types/client/locales.js
+		//#region src/client/locales.ts
 		/**
 		* `model` namespace dictionaries.
 		*
@@ -771,7 +771,7 @@ window.__ModuleLoader__.load({
 			"empty.efforts": "This model provides no reasoning effort levels."
 		};
 		//#endregion
-		//#region lib/types/client/index.js
+		//#region src/client/index.ts
 		/** One selectable row's id: an opaque row key (resolved by lookup, never parsed). */
 		function rowId(providerId, modelId) {
 			return `${providerId}/${modelId}`;

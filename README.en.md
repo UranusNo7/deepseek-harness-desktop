@@ -101,21 +101,45 @@ We want the plugin ecosystem to work like a phone app store: every plugin is bui
 
 Unlike many other projects, this project itself is a DSH [plugin](docs/plugin-development.en.md): the desktop shell composes through the same official path as third-party plugins. Desktop plugin capabilities are now available. We provide Desktop services so plugin developers can integrate their plugins with desktop capabilities: for example, viewing and switching work profiles, or installing, updating, and removing plugins in the active profile. See the [Desktop plugin API](dsh-plugin-desktop/docs/plugin-services.md) for complete usage details. See [Why DSH Desktop](docs/why-desktop.en.md) and [Plugin development](docs/plugin-development.en.md) for the reasoning and the third-party boundary.
 
-## Relationship to the Official Project
+## How It Differs from the Official Project
 
-This project is built on [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness).
+**In one line: the official project is the composable agent engine; Desktop is the ready-to-install desktop distribution.**
 
-This project is an implementation built on DeepSeek Harness and the Cordis plugin model, intended to provide the foundation for the DSH desktop experience.
+This project is built on [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness) but **does not fork or patch upstream source**. `deepseek-harness/` is pinned as a Git submodule at a verified version (currently `0.1.0-rc.6`) and runs unchanged; Desktop itself is a legitimate DSH plugin composed into the same runtime through the official Cordis mechanism.
 
-The official project provides the core agent capabilities, plugin system, and Web UI. This project primarily provides:
+### At a glance
 
-- Desktop application packaging
-- Starting, stopping, and recovering the local service
-- Desktop window and system tray integration
-- macOS and Windows installer builds and releases
-- An interface designed for desktop use
+| Dimension | Official deepseek-harness | DSH Desktop (this project) |
+| --- | --- | --- |
+| Form factor | CLI + local Web service; you install Node.js / pnpm and start it with commands | Native desktop app (Electron) with bundled Electron / Node.js / pnpm / pinned deps; install and launch |
+| Core engine | Agent loop, tools, sessions, Web UI, plugin system | **Reuses the official core unchanged** — no fork of the agent / session / tool protocols |
+| Composition | You write `cordis.patch.yml` yourself | **Overlays a desktop patch** on top of the official `dsh-web-app` composition (`dsh-plugin-desktop/cordis.patch.yml`), then layers the user profile |
+| Model capability | Direct per-provider via `dsh-llm` / `dsh-llm-pi-ai` | Adds an **optional logical model policy** `llm-model-policy`: cross-provider logical routing, GPT-only Fast mode persisted as `model-policy/fast` events and sent as `service_tier: priority` to OpenAI-compatible endpoints, with automatic compatibility for old physical sessions like `openai/gpt-5.6-luna` |
+| Search | DeepSeek search by default | DeepSeek search disabled by default; **Firecrawl** provides `web_search` / `web_fetch` when enabled per profile |
+| Runtime env | Uses whatever shell / pnpm / dsh is on the system | Ships isolated `pnpm` / `dsh` / `node` shims, env snapshots, Windows ACL sandbox and volume health checks, tray and terminal integration |
+| Distribution | Source + pnpm | **Windows NSIS / macOS DMG** installers, in-tray update checks, and `app.asar.unpacked` closure verification |
+| Plugin ecosystem | Official plugins | **Official plugins run in Desktop without changes**; Desktop also exposes scoped `desktopProfiles` / `desktopPnpm` capabilities to third-party plugins |
 
-If you prefer to run Harness from the command line or contribute to its core functionality, refer to the official repository first.
+### What Desktop adds
+
+- **Native shell**: Electron single-instance, BrowserWindow, tray, native menu, update downloader (`src/main.ts` / `src/electron-runtime.ts`).
+- **Host composition layer**: `cordis.patch.yml` ships `llm-model-policy` disabled by default plus Firecrawl search/fetch; a user profile enables them explicitly.
+- **Capability patches**: Yarn patches pinned to the `0.1.0-rc.6` runtime that add Host `session.models.fast` / `model.supportsFast` / `session.selectModel.fast`, Browser wire schemas, LLM `serviceTier`, pi-ai `service_tier` mapping, and the `model-policy/fast` session event.
+- **Windows hardening**: bundled `node-pty` binaries, `dsh-sandbox-windows-acl` fix, loopback binding enforcement, `app.asar.unpacked` physical-dependency verification.
+- **Workspace boundary**: outer Yarn workspace (`nodeLinker: node-modules`) isolated from the upstream pnpm workspace; all desktop code, tests, and release scripts live in `dsh-plugin-desktop/`.
+
+### What Desktop does NOT do
+
+- Does not edit any file inside the `deepseek-harness/` submodule.
+- Does not replace the agent loop or session storage protocol.
+- Does not expose Electron APIs to the Web renderer or add a separate IPC plugin system.
+- Does not rewrite the user's `$DSH_HOME` / `cordis.patch.yml` / `settings.yaml` on disk; compat shims (e.g. legacy Firecrawl `insert` migration) run in memory only.
+
+### Which one should you use?
+
+- Want a **ready-to-use** app with window / tray / installer / auto-update → use **DSH Desktop**.
+- Prefer the **command line** or want to contribute to the upstream engine / plugin protocol → use **official deepseek-harness**.
+- Building **plugins** → either works; official plugins run in Desktop as-is. For Desktop-specific services see [`dsh-plugin-desktop/docs/plugin-services.md`](dsh-plugin-desktop/docs/plugin-services.md).
 
 ## Special Thanks
 

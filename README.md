@@ -101,21 +101,45 @@ DSH Desktop 没有魔改上游源码，也不是一个固定写死的外壳。�
 
 与许多其他项目不同，这个项目本身就是一个 DSH [插件](docs/plugin-development.md)：桌面壳与第三方插件走同一条官方组合路径。Desktop 的插件能力已经可以使用。我们提供了 Desktop 服务，让插件开发者能够把插件与桌面能力集成起来：例如查看和切换工作配置，或在当前配置中安装、更新和移除插件。完整用法见[桌面插件接口说明](dsh-plugin-desktop/docs/plugin-services.zh.md)。为什么选择这样的边界、哪些能力不会暴露给第三方插件，见[为什么做 DSH Desktop](docs/why-desktop.md)和[插件开发指南](docs/plugin-development.md)。
 
-## 与官方项目的关系
+## 与官方项目的区别
 
-本项目基于 [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness) 构建。
+**一句话：官方提供可组合的智能体引擎，Desktop 提供开箱即用的桌面发行版。**
 
-本项目是基于 DeepSeek Harness 和 Cordis 插件思想的实现，旨在成为 DSH 桌面体验的基础设施。
+本项目基于 [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness) 构建，但**不是对上游源码的 fork 修改**。`deepseek-harness/` 以 Git submodule 形式固定在某个已验证版本（当前为 `0.1.0-rc.6`），以原样运行；Desktop 自身也是一个合法的 DSH 插件，通过官方 Cordis 插件机制与官方能力组合进同一个运行时。
 
-官方项目提供核心的智能体能力、插件系统和 Web UI。本项目主要负责：
+### 核心差异对比
 
-- 桌面应用封装
-- 本地服务的启动、停止与恢复
-- 桌面窗口和系统托盘集成
-- macOS、Windows 安装包构建与发布
-- 更适合桌面使用的界面体验
+| 维度 | 官方 deepseek-harness | DSH Desktop（本项目） |
+| --- | --- | --- |
+| 形态 | CLI + 本地 Web 服务，需自行安装 Node.js / pnpm 并用命令启动 | 原生桌面应用（Electron），内置 Electron / Node.js / pnpm / 固定依赖，下载安装即用 |
+| 核心引擎 | Agent 循环、工具、会话、Web UI、插件系统 | **完全复用官方核心**，不改 Agent / 会话 / 工具协议 |
+| 组合方式 | 用户自行编写 `cordis.patch.yml` 组合插件 | 在官方 `dsh-web-app` 组合之上**叠加桌面补丁**（`dsh-plugin-desktop/cordis.patch.yml`），再叠加用户 profile 层 |
+| 模型能力 | 按 provider 直连 `dsh-llm` / `dsh-llm-pi-ai` | 新增**可选的逻辑模型策略** `llm-model-policy`：跨 provider 逻辑模型路由、GPT 专属 Fast 模式（持久化为 `model-policy/fast` 事件，最终以 `service_tier: priority` 发送到 OpenAI 兼容接口）、旧物理会话 `openai/gpt-5.6-luna` 自动兼容 |
+| 搜索能力 | 默认 DeepSeek 搜索 | 默认关闭 DeepSeek 搜索，通过 **Firecrawl** 提供 `web_search` / `web_fetch`，按 profile 按需启用 |
+| 运行环境 | 依赖系统已安装的 shell / pnpm / dsh | 自带隔离的 `pnpm` / `dsh` / `node` shim、环境快照、Windows ACL 沙箱与卷健康检查，托盘与终端集成 |
+| 分发与更新 | 源码 + pnpm | 提供 **Windows NSIS / macOS DMG** 安装包、托盘内更新检查、已安装 `app.asar.unpacked` 的运行时闭包校验 |
+| 插件生态 | 官方插件市场 | **官方插件无需改动即可在桌面内运行**；桌面本身也通过 `desktopProfiles` / `desktopPnpm` 向第三方插件开放受控能力 |
 
-如果你希望通过命令行运行 Harness，或者参与核心功能开发，请优先查看官方仓库。
+### Desktop 额外做了什么
+
+- **原生壳**：Electron 单实例、BrowserWindow、系统托盘、原生菜单、更新下载器（`src/main.ts` / `src/electron-runtime.ts`）。
+- **Host 组合层**：`cordis.patch.yml` 携带但默认禁用的 `llm-model-policy`，以及 Firecrawl 搜索抓取能力，由用户 profile 显式启用后生效。
+- **能力补丁**：通过 Yarn patch 固定到 `0.1.0-rc.6` 运行时，补齐 Host 的 `session.models.fast` / `model.supportsFast` / `session.selectModel.fast`、Browser 的 wire schema、LLM 的 `serviceTier` 以及 pi-ai 的 `service_tier` 映射和 `model-policy/fast` 会话事件。
+- **Windows 加固**：`node-pty` 内置二进制、`dsh-sandbox-windows-acl` 修复、loopback 绑定校验、`app.asar.unpacked` 物理依赖校验。
+- **工程边界**：外层 Yarn workspace（`nodeLinker: node-modules`）与上游 pnpm workspace 隔离，`dsh-plugin-desktop/` 拥有全部桌面代码、测试与发布脚本。
+
+### Desktop 没有做什么
+
+- 不修改 `deepseek-harness/` 子模块内的任何源码。
+- 不另造一套 Agent 循环或会话存储协议。
+- 不把 Electron API 暴露给 Web renderer，不新增独立的 IPC 插件系统。
+- 不自动改写用户的 `$DSH_HOME` / `cordis.patch.yml` / `settings.yaml`；兼容逻辑（如旧 Firecrawl `insert` 迁移）仅在内存中生效。
+
+### 如何选择
+
+- 想**直接使用**、需要窗口 / 托盘 / 安装包 / 一键更新 → 用 **DSH Desktop**。
+- 想**通过命令行运行**、参与上游核心功能或插件协议开发 → 直接用 **官方 deepseek-harness**。
+- 想**开发插件** → 两边通用；官方插件可直接在 Desktop 内运行，Desktop 插件接口见 [`dsh-plugin-desktop/docs/plugin-services.zh.md`](dsh-plugin-desktop/docs/plugin-services.zh.md)。
 
 ## 特别感谢
 

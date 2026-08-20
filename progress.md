@@ -183,3 +183,37 @@
 - `yarn.lock`：更新 vendor policy 与 UI patch 内容哈希。
 - `progress.md`：追加本轮诊断、修复和验证记录。
 - 回滚点：本轮未提交 commit；如需回到 2.0.4，仅反向移除上述 route compatibility runtime/UI hunk、legacy 测试、文档说明和 2.0.5 版本/lock hash，保留 2.0.4 的 client-connection wire schema、Fast policy、Firecrawl 迁移及其他未列出的改动；不要使用 `git restore` 恢复整个文件或修改用户 `$DSH_HOME`。
+
+## 2026-08-20 - Task: 以 harness-master 的独立 fast 插件为基准同步上游 rc.8
+
+### What was done
+
+- 将 `deepseek-harness` 子模块从 `47f9438`（rc.6）同步到 `fe4b64f`（基于 rc.8 的 `dsh-fast` 独立插件 + `codex-model-policy` 重构），以上游 `fast/mode`（兼容 `model-policy/fast`）和 `/fast` 命令为主。
+- 移除 Desktop 侧冗余的 `dsh-llm-model-policy` vendored 闭包及 7 个 Fast 相关 Yarn patch（`dsh-llm`、`dsh-llm-pi-ai`、`dsh-host-apiproxy`、`dsh-client-connection`、`dsh-client-ui-model-selection`、`dsh-api-remotes`、`dsh-session`），改为直接消费上游的 `@deepseek-ai/dsh-fast` 与 `@deepseek-ai/dsh-codex-model-policy`（vendor 为 `file:vendor/dsh-fast`、`file:vendor/dsh-codex-model-policy`，构建自 harness-master 的 `packages/llm/fast` 与 `codex-model-policy`）。
+- 将 `dsh-plugin-desktop/cordis.patch.yml` 的 `llm-model-policy` 插入改为 `codex-model-policy`，并在 `src/profile.ts` 新增 `migrateLegacyModelPolicy`，将旧用户 profile 中的 `llm-model-policy`/`dsh-llm-model-policy` 自动迁移到 `codex-model-policy`/`dsh-codex-model-policy`，不改写用户文件。
+- 更新 `dsh-plugin-desktop` 依赖到 `0.1.0-rc.8`（移除已删除的 `dsh-client-schema-form`，将 `dsh-client-web-react` 重命名为 `dsh-client-ui-renderer`），并处理 `dsh-fast`/`codex` 的 `workspace:^` 依赖为 `^3.18.1`/`^0.1.0-rc.8`。
+
+### Testing
+
+- `corepack yarn install`：通过（`npmMinimalAgeGate` 已无需，`dsh-client-schema-form` 已移除）。
+- `corepack yarn workspace dsh-plugin-desktop typecheck`：通过。
+- `corepack yarn workspace dsh-plugin-desktop build`：通过。
+- `corepack yarn workspace dsh-plugin-desktop test`：通过，32 files、295 tests（`fast-policy` 已简化为 3 tests 聚焦 `dsh-fast` 的 `fast/mode` 持久化）。
+- `dsh-plugin-desktop/tests/package.spec.ts`：更新为校验 `dsh-fast`/`dsh-codex-model-policy` vendor、`cordis.patch.yml` 的 `codex-model-policy` 及 `/fast` 命令存在于 `dsh-fast`。
+- `dsh-plugin-desktop/tests/profile.spec.ts`：更新为校验 `codex-model-policy` 的 disabled 插入与迁移。
+
+### Notes
+
+- `deepseek-harness`：`47f9438` -> `fe4b64f`。
+- `dsh-plugin-desktop/package.json`：移除 `dsh-llm-model-policy` 的 `file:vendor`，新增 `dsh-fast`、`dsh-codex-model-policy` 的 `file:vendor`，并更新所有 `@deepseek-ai/dsh-*` 到 `0.1.0-rc.8`（`codex` 为 `rc.5` 但 peer 为 `rc.8`），处理 `client-schema-form` 删除与 `web-react` 重命名。
+- `dsh-plugin-desktop/vendor/dsh-fast`、`vendor/dsh-codex-model-policy`：新增，构建自 `D:\\python_code\\deepseek-harness-master` 的 `packages/llm/fast` 与 `codex-model-policy`（`lib` 含 `fast/mode` 与 `policy.routes.some`）。
+- `dsh-plugin-desktop/vendor/dsh-llm-model-policy`：删除。
+- `dsh-plugin-desktop/cordis.patch.yml`：`llm-model-policy` -> `codex-model-policy`。
+- `dsh-plugin-desktop/src/profile.ts`：新增 `LEGACY_MODEL_POLICY_*`/`CODEX_MODEL_POLICY_*` 与 `migrateLegacyModelPolicy`，并串联到 `homePatches`/`profilePatches`。
+- `dsh-plugin-desktop/scripts/verify-packaged-runtime.ts`：`dsh-llm-model-policy` -> `dsh-fast`/`dsh-codex-model-policy`。
+- `dsh-plugin-desktop/tests/package.spec.ts`、`tests/profile.spec.ts`、`tests/fast-policy.spec.ts`、`tests/electron-runtime.spec.ts`、`README.md`/`README.zh.md`：同步新策略与版本 `2.0.6`。
+- `package.json`：`resolutions` 仅保留 `app-builder-lib`、`dsh-sandbox-windows-acl`、`dsh-tool-pwsh` 的 `rc.8` patch，移除 7 个 Fast 相关 patch。
+- `patches/dsh-*@0.1.0-rc.6.patch`：删除 7 个；`dsh-sandbox-windows-acl`、`dsh-tool-pwsh` 重命名为 `@0.1.0-rc.8.patch`。
+- `yarn.lock`：更新到 rc.8。
+- `progress.md`：追加本轮同步记录。
+- 回滚点：本轮在 `chore/sync-harness-fast` 分支；如需回到 `2.0.5`，`git checkout master` 并 `git submodule update --init` 到 `47f9438`，然后 `git checkout master -- package.json dsh-plugin-desktop/package.json yarn.lock patches/ dsh-plugin-desktop/vendor/ dsh-plugin-desktop/cordis.patch.yml dsh-plugin-desktop/src/profile.ts dsh-plugin-desktop/tests/ dsh-plugin-desktop/scripts/verify-packaged-runtime.ts`，不要直接 `git restore` 整个分支或改写用户 `$DSH_HOME`。

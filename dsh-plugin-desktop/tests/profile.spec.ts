@@ -229,8 +229,8 @@ describe('desktop profile composition', () => {
     const rows = composeEntries([prepared.patches])
 
     expect(rows).toContainEqual(expect.objectContaining({
-      id: 'llm-model-policy',
-      name: '@deepseek-ai/dsh-llm-model-policy',
+      id: 'codex-model-policy',
+      name: '@deepseek-ai/dsh-codex-model-policy',
       disabled: true,
     }))
   })
@@ -238,8 +238,8 @@ describe('desktop profile composition', () => {
   it('lets the profile layer enable the shared logical policy for every preset', () => {
     const home = temporaryHome()
     writeFileSync(join(home, 'cordis.patch.yml'), [
-      '- id: llm-model-policy',
-      "  name: '@deepseek-ai/dsh-llm-model-policy'",
+      '- id: codex-model-policy',
+      "  name: '@deepseek-ai/dsh-codex-model-policy'",
       '  disabled: false',
       '  config:',
       '    providerId: model-policy',
@@ -255,8 +255,8 @@ describe('desktop profile composition', () => {
     const prepared = prepareDesktopProfile(undefined, home, 'darwin')
     const rows = composeEntries([prepared.patches])
     expect(rows).toContainEqual(expect.objectContaining({
-      id: 'llm-model-policy',
-      name: '@deepseek-ai/dsh-llm-model-policy',
+      id: 'codex-model-policy',
+      name: '@deepseek-ai/dsh-codex-model-policy',
       disabled: false,
       config: expect.objectContaining({
         providerId: 'model-policy',

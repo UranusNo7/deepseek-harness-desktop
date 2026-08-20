@@ -117,57 +117,60 @@ describe('published package surface', () => {
     expect(metadata).toContain('Firecrawl provider')
   })
 
-  it('ships the Fast logical model policy closure and desktop opt-in row', () => {
-    expect(manifest.dependencies?.['@deepseek-ai/dsh-llm-model-policy']).toBe(
-      'file:vendor/dsh-llm-model-policy',
+  it('ships the Fast and codex policy vendors and defers to upstream fast', () => {
+    expect(manifest.dependencies?.['@deepseek-ai/dsh-fast']).toBe('file:vendor/dsh-fast')
+    expect(manifest.dependencies?.['@deepseek-ai/dsh-codex-model-policy']).toBe(
+      'file:vendor/dsh-codex-model-policy',
     )
-    const policyManifest = JSON.parse(readFileSync(
-      new URL('vendor/dsh-llm-model-policy/package.json', packageRoot),
+    expect(manifest.dependencies).not.toHaveProperty('@deepseek-ai/dsh-llm-model-policy')
+    const fastManifest = JSON.parse(readFileSync(
+      new URL('vendor/dsh-fast/package.json', packageRoot),
       'utf8',
     )) as { name?: unknown; main?: unknown; types?: unknown; version?: unknown }
-    expect(policyManifest).toEqual(expect.objectContaining({
-      name: '@deepseek-ai/dsh-llm-model-policy',
+    expect(fastManifest).toEqual(expect.objectContaining({
+      name: '@deepseek-ai/dsh-fast',
       main: 'lib/index.js',
       types: 'lib/types/index.d.ts',
     }))
-    expect(policyManifest.version).toBe('0.1.0-desktop.1')
-    const policyRuntime = readFileSync(new URL('vendor/dsh-llm-model-policy/lib/index.js', packageRoot), 'utf8')
-    expect(policyRuntime).toContain('model-policy/fast')
-    expect(policyRuntime).toContain('policy.routes.some')
-    const modelSelectionClient = readFileSync(new URL(
-      'node_modules/@deepseek-ai/dsh-client-ui-model-selection/lib/client.js',
-      packageRoot,
-    ), 'utf8')
-    expect(modelSelectionClient).toContain('toggleFast')
-    expect(modelSelectionClient).toContain('fastOption')
-    expect(modelSelectionClient.indexOf('fastOption')).toBeGreaterThan(modelSelectionClient.indexOf('reasoning'))
-    expect(modelSelectionClient).not.toMatch(/\/fast(?:\s|["'`])/u)
-    const connectionClient = readFileSync(new URL(
-      'node_modules/@deepseek-ai/dsh-client-connection/lib/client.js',
-      packageRoot,
-    ), 'utf8')
-    expect(connectionClient).toContain('modelPolicyFastStateSchema')
-    expect(connectionClient).toContain('supportsFast: boolean().optional()')
-    expect(connectionClient).toContain('fast: modelPolicyFastStateSchema.optional()')
-    const slashCommands = readFileSync(new URL(
-      'node_modules/@deepseek-ai/dsh-commands/lib/index.js',
-      packageRoot,
-    ), 'utf8')
-    expect(slashCommands).not.toMatch(/\/fast(?:\s|["'`])/u)
+    expect(typeof fastManifest.version).toBe('string')
+    const codexManifest = JSON.parse(readFileSync(
+      new URL('vendor/dsh-codex-model-policy/package.json', packageRoot),
+      'utf8',
+    )) as { name?: unknown; main?: unknown; types?: unknown; version?: unknown }
+    expect(codexManifest).toEqual(expect.objectContaining({
+      name: '@deepseek-ai/dsh-codex-model-policy',
+      main: 'lib/index.js',
+      types: 'lib/types/index.d.ts',
+    }))
+    expect(typeof codexManifest.version).toBe('string')
+    const fastRuntime = readFileSync(new URL('vendor/dsh-fast/lib/fast.js', packageRoot), 'utf8')
+    expect(fastRuntime).toContain('fast/mode')
+    const codexRuntime = readFileSync(new URL('vendor/dsh-codex-model-policy/lib/index.js', packageRoot), 'utf8')
+    expect(codexRuntime).toContain('policy.routes.some')
+    const fastCommands = readFileSync(new URL('vendor/dsh-fast/lib/index.js', packageRoot), 'utf8')
+    expect(fastCommands).toMatch(/fast/u)
     const patch = readFileSync(new URL('cordis.patch.yml', packageRoot), 'utf8').replaceAll('\r\n', '\n')
-    expect(patch).toContain('id: llm-model-policy')
-    expect(patch).toContain("name: '@deepseek-ai/dsh-llm-model-policy'")
+    expect(patch).toContain('id: codex-model-policy')
+    expect(patch).toContain("name: '@deepseek-ai/dsh-codex-model-policy'")
     expect(patch).toContain('disabled: true')
+    expect(patch).not.toContain("name: '@deepseek-ai/dsh-llm-model-policy'")
     for (const key of [
-      '@deepseek-ai/dsh-llm@npm:0.1.0-rc.6',
-      '@deepseek-ai/dsh-llm-pi-ai@npm:0.1.0-rc.6',
-      '@deepseek-ai/dsh-host-apiproxy@npm:0.1.0-rc.6',
-      '@deepseek-ai/dsh-api-remotes@npm:0.1.0-rc.6',
-      '@deepseek-ai/dsh-client-ui-model-selection@npm:0.1.0-rc.6',
-      '@deepseek-ai/dsh-client-connection@npm:0.1.0-rc.6',
-      '@deepseek-ai/dsh-session@npm:0.1.0-rc.6',
+      '@deepseek-ai/dsh-sandbox-windows-acl@npm:0.1.0-rc.8',
+      '@deepseek-ai/dsh-sandbox-windows-acl@npm:^0.1.0-rc.8',
+      '@deepseek-ai/dsh-tool-pwsh@npm:^0.1.0-rc.8',
     ]) {
       expect(workspaceManifest.resolutions?.[key]).toBeTypeOf('string')
+    }
+    for (const key of [
+      '@deepseek-ai/dsh-llm@npm:0.1.0-rc.8',
+      '@deepseek-ai/dsh-llm-pi-ai@npm:0.1.0-rc.8',
+      '@deepseek-ai/dsh-host-apiproxy@npm:0.1.0-rc.8',
+      '@deepseek-ai/dsh-api-remotes@npm:0.1.0-rc.8',
+      '@deepseek-ai/dsh-client-ui-model-selection@npm:0.1.0-rc.8',
+      '@deepseek-ai/dsh-client-connection@npm:0.1.0-rc.8',
+      '@deepseek-ai/dsh-session@npm:0.1.0-rc.8',
+    ]) {
+      expect(workspaceManifest.resolutions?.[key]).toBeUndefined()
     }
   })
 
@@ -231,7 +234,8 @@ describe('published package surface', () => {
       'build/app-icon-mac.png',
       'build/tray-icon.svg',
       'build/tray-icon*.png',
-      'vendor/dsh-llm-model-policy/**',
+      'vendor/dsh-fast/**',
+      'vendor/dsh-codex-model-policy/**',
       'docs/**',
     ]))
     expect(manifest.build?.files).toEqual([
@@ -375,9 +379,9 @@ describe('published package surface', () => {
   })
 
   it('starts restricted Windows shells with a hidden console show state', () => {
-    const patchResolution = 'patch:@deepseek-ai/dsh-sandbox-windows-acl@npm%3A0.1.0-rc.6#./patches/dsh-sandbox-windows-acl@0.1.0-rc.6.patch'
+    const patchResolution = 'patch:@deepseek-ai/dsh-sandbox-windows-acl@npm%3A0.1.0-rc.8#./patches/dsh-sandbox-windows-acl@0.1.0-rc.8.patch'
     const lockfile = readFileSync(new URL('yarn.lock', workspaceRoot), 'utf8')
-    const patch = readFileSync(new URL('patches/dsh-sandbox-windows-acl@0.1.0-rc.6.patch', workspaceRoot), 'utf8')
+    const patch = readFileSync(new URL('patches/dsh-sandbox-windows-acl@0.1.0-rc.8.patch', workspaceRoot), 'utf8')
     const workspaceRequire = createRequire(new URL('package.json', packageRoot))
     const sandboxManifest = workspaceRequire.resolve('@deepseek-ai/dsh-sandbox-windows-acl/package.json')
     const sandboxLocalManifest = workspaceRequire.resolve('@deepseek-ai/dsh-sandbox-local/package.json')
@@ -386,12 +390,12 @@ describe('published package surface', () => {
     const runtimeChunks = readdirSync(sandboxLib).filter(name => /^types-.*\.js$/u.test(name))
 
     expect(workspaceManifest.resolutions).toMatchObject({
-      '@deepseek-ai/dsh-sandbox-windows-acl@npm:0.1.0-rc.6': patchResolution,
-      '@deepseek-ai/dsh-sandbox-windows-acl@npm:^0.1.0-rc.6': patchResolution,
+      '@deepseek-ai/dsh-sandbox-windows-acl@npm:0.1.0-rc.8': patchResolution,
+      '@deepseek-ai/dsh-sandbox-windows-acl@npm:^0.1.0-rc.8': patchResolution,
     })
     expect(sandboxLocalRequire.resolve('@deepseek-ai/dsh-sandbox-windows-acl/package.json'))
       .toBe(sandboxManifest)
-    expect(lockfile).toContain('@deepseek-ai/dsh-sandbox-windows-acl@patch:@deepseek-ai/dsh-sandbox-windows-acl@npm%3A0.1.0-rc.6#./patches/dsh-sandbox-windows-acl@0.1.0-rc.6.patch')
+    expect(lockfile).toContain('@deepseek-ai/dsh-sandbox-windows-acl@patch:@deepseek-ai/dsh-sandbox-windows-acl@npm%3A0.1.0-rc.8#./patches/dsh-sandbox-windows-acl@0.1.0-rc.8.patch')
     expect(patch.match(/^\+\s*dwFlags: 257,\r?$/gmu)).toHaveLength(2)
     expect(patch.match(/^\+\s*wShowWindow: 0,\r?$/gmu)).toHaveLength(2)
     expect(runtimeChunks).toHaveLength(1)

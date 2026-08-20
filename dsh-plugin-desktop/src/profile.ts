@@ -60,6 +60,10 @@ const UI_SIDEBAR_PACKAGE = '@deepseek-ai/dsh-client-ui-sidebar'
 const UI_CONVERSATION_PACKAGE = '@deepseek-ai/dsh-client-ui-conversation'
 const FIRECRAWL_ROW_ID = 'web-fetch-firecrawl'
 const FIRECRAWL_PACKAGE = '@uranusno7/dsh-web-fetch-firecrawl'
+const LEGACY_MODEL_POLICY_ROW_ID = 'llm-model-policy'
+const LEGACY_MODEL_POLICY_PACKAGE = '@deepseek-ai/dsh-llm-model-policy'
+const CODEX_MODEL_POLICY_ROW_ID = 'codex-model-policy'
+const CODEX_MODEL_POLICY_PACKAGE = '@deepseek-ai/dsh-codex-model-policy'
 
 /**
  * Parse desktop presentation state and reject corrupted values.
@@ -315,6 +319,43 @@ function migrateLegacyFirecrawlInsert(patches: PatchOptions[]): PatchOptions[] {
 }
 
 /**
+ * Migrate the legacy `llm-model-policy` row to the new `codex-model-policy` id/package.
+ * The vendored `dsh-llm-model-policy` is now `dsh-codex-model-policy`; keep old
+ * user profiles bootable without rewriting their patch files.
+ */
+function migrateLegacyModelPolicy(patches: PatchOptions[]): PatchOptions[] {
+  return patches.flatMap((patch) => {
+    if (Array.isArray(patch.insert)) {
+      const legacyInsert = patch.insert.filter(row => row.id === LEGACY_MODEL_POLICY_ROW_ID
+        && row.name === LEGACY_MODEL_POLICY_PACKAGE)
+      if (legacyInsert.length > 0) {
+        const insert = patch.insert.filter(row => !(row.id === LEGACY_MODEL_POLICY_ROW_ID
+          && row.name === LEGACY_MODEL_POLICY_PACKAGE))
+        const migrated = legacyInsert.map(row => ({
+          id: CODEX_MODEL_POLICY_ROW_ID,
+          name: CODEX_MODEL_POLICY_PACKAGE,
+          ...(row.disabled === undefined ? {} : { disabled: row.disabled }),
+          config: rowConfig(row),
+        }))
+        return [
+          ...(insert.length === 0 ? [] : [{ ...patch, insert }]),
+          ...migrated,
+        ]
+      }
+    }
+    if (patch.id === LEGACY_MODEL_POLICY_ROW_ID && patch.name === LEGACY_MODEL_POLICY_PACKAGE) {
+      return [{
+        id: CODEX_MODEL_POLICY_ROW_ID,
+        name: CODEX_MODEL_POLICY_PACKAGE,
+        ...(patch.disabled === undefined ? {} : { disabled: patch.disabled }),
+        config: rowConfig(patch as unknown as EntryOptions),
+      }]
+    }
+    return [patch]
+  })
+}
+
+/**
  * Load and compose one desktop profile generation.
  * @param telemetryDisabled - inherited DSH telemetry opt-out value.
  * @param home - Harness home containing profiles and the machine-wide patch.
@@ -355,8 +396,8 @@ export function prepareDesktopProfile(
     loadedHomePatches,
     bareModuleBaseUrl,
   )
-  const homePatches = migrateLegacyFirecrawlInsert(filteredHomePatches)
-  const profilePatches = migrateLegacyFirecrawlInsert(profile.patches)
+  const homePatches = migrateLegacyModelPolicy(migrateLegacyFirecrawlInsert(filteredHomePatches))
+  const profilePatches = migrateLegacyModelPolicy(migrateLegacyFirecrawlInsert(profile.patches))
   const patches: PatchOptions[] = [
     ...bundlePatches,
     ...profilePatches,

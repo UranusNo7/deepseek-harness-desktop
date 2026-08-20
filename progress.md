@@ -217,3 +217,30 @@
 - `yarn.lock`：更新到 rc.8。
 - `progress.md`：追加本轮同步记录。
 - 回滚点：本轮在 `chore/sync-harness-fast` 分支；如需回到 `2.0.5`，`git checkout master` 并 `git submodule update --init` 到 `47f9438`，然后 `git checkout master -- package.json dsh-plugin-desktop/package.json yarn.lock patches/ dsh-plugin-desktop/vendor/ dsh-plugin-desktop/cordis.patch.yml dsh-plugin-desktop/src/profile.ts dsh-plugin-desktop/tests/ dsh-plugin-desktop/scripts/verify-packaged-runtime.ts`，不要直接 `git restore` 整个分支或改写用户 `$DSH_HOME`。
+
+## 2026-08-20 - Task: 修复 codex 启动时 Cannot read properties of undefined (reading 'id')
+
+### What was done
+
+- 定位到 `codex-model-policy` 的 `physicalAdapterFor` 直接用 `new Map(Object.entries(providers))` 透传原始 `PiAiProviderProfile`，导致 `PiAiAdapter.current()` 中 `models.setProvider(profile.piProvider)` 读取 `undefined.id` 崩溃，旧 `C:\Users\UranusNo7\.dsh\profiles\desktop\cordis.patch.yml` 的 `openai`/`opencode-go`/`xai`/`aihub` 四路由因此无法启动（`plugin tree failed to load: failed to apply loader entry codex-model-policy: Cannot read properties of undefined (reading 'id')`）。
+- 在 `deepseek-harness` 上游修复 `packages/llm/codex-model-policy/src/index.ts` 改为 `resolveProfiles(profilesForServiceTier(...))`，并在 `packages/llm/llm-pi-ai` 暴露 `resolveProfiles`/`assertServiceable`，补充 `PI_AI_SERVICE_TIERS`/`serviceTier` 配置与 `PiAiAdapter` 的 `onPayload` 映射（`fast`→`priority`，仅 `openai-*` 生效），使 `fast` 逻辑与物理路由解耦。
+- 将上游修复以 `b3ab3d10` 推送到 `https://github.com/UranusNo7/dsh-codex-model-policy.git`，桌面端 `deepseek-harness` 子模块与 `upstream.json` 同步到该提交；桌面端以 `file:vendor/dsh-llm-pi-ai` 形式 vendoring 固定后的 `llm-pi-ai`（`lib/index.js` 含 `resolveProfiles` 与 `service_tier` 逻辑），并更新 `dsh-codex-model-policy` vendor 的 `lib/index.js` 到 `resolveProfiles` 版本，修复 `yarn.lock` 的 `71c8ed`/`159071` 哈希与 `verify-packaged-runtime` 对 `dsh-llm-pi-ai` 的打包校验。
+
+### Testing
+
+- `corepack yarn install`（`YARN_NPM_MINIMAL_AGE_GATE=0`）：通过，`dsh-codex-model-policy` 与 `dsh-llm-pi-ai` 均解析为 `file:vendor`。
+- `corepack yarn workspace dsh-plugin-desktop typecheck`：通过。
+- `corepack yarn workspace dsh-plugin-desktop test`：通过，32 files、295 tests。
+- 使用复制的真实用户 `cordis.patch.yml`（`C:\Users\UranusNo7\.dsh\profiles\desktop`，`llm-model-policy` 已迁移为 `codex-model-policy`）通过 `prepareDesktopProfile` + `boot` 在隔离 `DSH_HOME` 中成功启动 Host，未再抛出 `Cannot read properties of undefined (reading 'id')`；`verify:loader`/`verify:profile` 通过。
+
+### Notes
+
+- `deepseek-harness`：`fe4b64f` -> `b3ab3d10`（`packages/llm/codex-model-policy/src/index.ts`、`packages/llm/llm-pi-ai/src/adapter.ts`/`config.ts`/`index.ts`）。
+- `upstream.json`：`commit` 更新到 `b3ab3d10`。
+- `dsh-plugin-desktop/vendor/dsh-llm-pi-ai`：新增，构建自 `deepseek-harness` 的 `llm-pi-ai` 修复版（`lib/index.js` 含 `PI_AI_SERVICE_TIERS` 与 `onPayload`）。
+- `dsh-plugin-desktop/vendor/dsh-codex-model-policy/lib/index.js`（及 `lib/types`）：更新到 `resolveProfiles` 版本。
+- `dsh-plugin-desktop/package.json`：`@deepseek-ai/dsh-llm-pi-ai` 改为 `file:vendor/dsh-llm-pi-ai`，`files` 增加 `vendor/dsh-llm-pi-ai/**`。
+- `dsh-plugin-desktop/scripts/verify-packaged-runtime.ts`：`REQUIRED_PACKAGED_RUNTIME_ENTRIES`/`REQUIRED_UNPACKED_RUNTIME_ENTRIES`/`REQUIRED_UNPACKED_PACKAGE_SPECIFIERS` 增加 `dsh-llm-pi-ai`。
+- `yarn.lock`：`dsh-codex-model-policy` 哈希 `975bd2`→`71c8ed`，新增 `dsh-llm-pi-ai` `159071`。
+- 关于“500K 上下文无法输出”：`gpt-5.6-luna/sol/terra` 的 `contextWindow` 配置为 `272000`，`grok-4.5/4.6` 为 `500000`，`deepseek-v4` 为 `1000000`；当累积上下文（含历史、工具结果、图片 base64）超过所选模型的 `contextWindow` 时，`pi-ai` 适配器会按 `maxRequestImageBytes` 丢弃最老图片或直接让提供方以 `context length` 错误拒绝，导致“无输出”。建议：1) 为 500K 会话选用 `deepseek-v4` 或调大 `contextWindow` 配置 2) 使用 `/compact` 或 `compaction-basic` 压缩历史 3) 检查 `token-meter` 的 breakdown 是否接近上限。
+- 回滚点：`git revert d95eb8c5` 并 `git submodule update --init` 到 `fe4b64f`，同时 `git checkout HEAD~1 -- dsh-plugin-desktop/vendor/dsh-llm-pi-ai dsh-plugin-desktop/package.json dsh-plugin-desktop/scripts/verify-packaged-runtime.ts yarn.lock`，不要改写用户 `$DSH_HOME`。

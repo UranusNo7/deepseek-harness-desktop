@@ -223,19 +223,20 @@ describe('desktop profile composition', () => {
     }))
   })
 
-  it('ships the logical model policy row disabled until a profile supplies routes', () => {
+  it('drops the logical model policy row when only fast is needed', () => {
     const home = temporaryHome()
     const prepared = prepareDesktopProfile(undefined, home, 'darwin')
     const rows = composeEntries([prepared.patches])
 
-    expect(rows).toContainEqual(expect.objectContaining({
+    expect(rows).not.toContainEqual(expect.objectContaining({
       id: 'codex-model-policy',
-      name: '@deepseek-ai/dsh-codex-model-policy',
-      disabled: true,
+    }))
+    expect(rows).not.toContainEqual(expect.objectContaining({
+      id: 'llm-model-policy',
     }))
   })
 
-  it('lets the profile layer enable the shared logical policy for every preset', () => {
+  it('drops a profile-supplied logical policy and keeps only fast', () => {
     const home = temporaryHome()
     writeFileSync(join(home, 'cordis.patch.yml'), [
       '- id: codex-model-policy',
@@ -254,16 +255,8 @@ describe('desktop profile composition', () => {
 
     const prepared = prepareDesktopProfile(undefined, home, 'darwin')
     const rows = composeEntries([prepared.patches])
-    expect(rows).toContainEqual(expect.objectContaining({
+    expect(rows).not.toContainEqual(expect.objectContaining({
       id: 'codex-model-policy',
-      name: '@deepseek-ai/dsh-codex-model-policy',
-      disabled: false,
-      config: expect.objectContaining({
-        providerId: 'model-policy',
-        models: expect.objectContaining({
-          'gpt-5.6': expect.objectContaining({ supportsFast: true }),
-        }),
-      }),
     }))
   })
 

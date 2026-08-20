@@ -244,3 +244,33 @@
 - `yarn.lock`：`dsh-codex-model-policy` 哈希 `975bd2`→`71c8ed`，新增 `dsh-llm-pi-ai` `159071`。
 - 关于“500K 上下文无法输出”：`gpt-5.6-luna/sol/terra` 的 `contextWindow` 配置为 `272000`，`grok-4.5/4.6` 为 `500000`，`deepseek-v4` 为 `1000000`；当累积上下文（含历史、工具结果、图片 base64）超过所选模型的 `contextWindow` 时，`pi-ai` 适配器会按 `maxRequestImageBytes` 丢弃最老图片或直接让提供方以 `context length` 错误拒绝，导致“无输出”。建议：1) 为 500K 会话选用 `deepseek-v4` 或调大 `contextWindow` 配置 2) 使用 `/compact` 或 `compaction-basic` 压缩历史 3) 检查 `token-meter` 的 breakdown 是否接近上限。
 - 回滚点：`git revert d95eb8c5` 并 `git submodule update --init` 到 `fe4b64f`，同时 `git checkout HEAD~1 -- dsh-plugin-desktop/vendor/dsh-llm-pi-ai dsh-plugin-desktop/package.json dsh-plugin-desktop/scripts/verify-packaged-runtime.ts yarn.lock`，不要改写用户 `$DSH_HOME`。
+
+## 2026-08-20 - Task: 仅保留 fast 模式，移除 codex 逻辑模型
+
+### What was done
+
+- 用户确认主用模型为 `muse-spark-1.2-contributor`（`opencode-go1` 物理路由），`codex-model-policy` 的逻辑路由与 `model` 命名空间的 `zh` 字典与 `dsh-fast` 冲突导致 `Failed to load plugins @deepseek-ai/dsh-codex-model-policy: locale namespace "model" already has locale "zh"`。按“仅保留 fast”决策移除 `codex`。
+- `dsh-plugin-desktop/cordis.patch.yml`：删除 `codex-model-policy` 的 `disabled: true` 插入块。
+- `dsh-plugin-desktop/package.json`：移除 `@deepseek-ai/dsh-codex-model-policy` 的 `file:vendor` 依赖，`files` 移除 `vendor/dsh-codex-model-policy/**`，保留 `vendor/dsh-fast/**` 与 `vendor/dsh-llm-pi-ai/**`（`fast` 仍通过 `dsh-fast` 的 `fast/mode` 与 `llm-pi-ai` 的 `service_tier: priority` 生效）。
+- `dsh-plugin-desktop/vendor/dsh-codex-model-policy`：整目录删除。
+- `dsh-plugin-desktop/scripts/verify-packaged-runtime.ts`：`REQUIRED_*` 三处移除 `dsh-codex-model-policy` 条目，保留 `dsh-fast`/`dsh-llm-pi-ai`。
+- `dsh-plugin-desktop/src/profile.ts`：`migrateLegacyModelPolicy` 改为 `dropModelPolicy`，对 `home` 与 `profile` 层的 `patch.insert` 与顶层 `patch.id` 同时过滤 `llm-model-policy`/`codex-model-policy`，旧 `cordis.patch.yml` 中的 `codex` 行被静默丢弃而不改写用户文件，彻底避免 locale 冲突。
+- `dsh-plugin-desktop/tests/package.spec.ts`/`profile.spec.ts`：`package.spec` 的 `ships the Fast and codex` 改为 `ships the Fast and pi-ai`，`files` 断言改为 `dsh-llm-pi-ai`，`profile.spec` 的两条 `codex-model-policy` 用例改为 `drops the logical model policy`/`drops a profile-supplied logical policy`，断言 `not.toContain`。
+
+### Testing
+
+- `corepack yarn install`：通过，`dsh-codex-model-policy` 从解析中移除。
+- `corepack yarn workspace dsh-plugin-desktop build`/`typecheck`：通过。
+- `corepack yarn workspace dsh-plugin-desktop test`：通过，32 files、295 tests（更新后 `package.spec` 15 tests、`profile.spec` 19 tests 均通过，`verify-packaged-runtime` 18 tests 通过）。
+
+### Notes
+
+- `dsh-plugin-desktop/cordis.patch.yml`：删除 `codex-model-policy` 插入。
+- `dsh-plugin-desktop/package.json`：移除 `codex` 依赖与 `files`。
+- `dsh-plugin-desktop/vendor/dsh-codex-model-policy`：删除。
+- `dsh-plugin-desktop/scripts/verify-packaged-runtime.ts`：移除 `codex` 三处。
+- `dsh-plugin-desktop/src/profile.ts`：`LEGACY_MODEL_POLICY_*`/`CODEX_MODEL_POLICY_*` 保留但 `dropModelPolicy` 同时过滤两者，调用处 `migrateLegacyModelPolicy`→`dropModelPolicy`。
+- `dsh-plugin-desktop/tests/package.spec.ts`/`profile.spec.ts`：同步“仅 fast”断言。
+- `yarn.lock`：移除 `dsh-codex-model-policy` 的 `71c8ed` 条目。
+- 思考深度与上下文窗口：`codex` 移除后，`reasoningEffort` 与 `contextWindow`/`maxTokens` 改由物理 `dsh-llm-pi-ai` 的 `providers[].models[]` 直接配置（用户已在 `opencode-go1` 的 `muse-spark` 上配置 `1048576`/`131072`），无需逻辑层。
+- 回滚点：`git revert HEAD` 即可恢复 `codex`，或 `git checkout HEAD~1 -- dsh-plugin-desktop/cordis.patch.yml dsh-plugin-desktop/package.json dsh-plugin-desktop/scripts/verify-packaged-runtime.ts dsh-plugin-desktop/src/profile.ts dsh-plugin-desktop/tests/ yarn.lock` 并 `git checkout HEAD~1 -- dsh-plugin-desktop/vendor/dsh-codex-model-policy`，不要改写用户 `$DSH_HOME`。

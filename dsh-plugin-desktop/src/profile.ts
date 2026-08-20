@@ -319,37 +319,25 @@ function migrateLegacyFirecrawlInsert(patches: PatchOptions[]): PatchOptions[] {
 }
 
 /**
- * Migrate the legacy `llm-model-policy` row to the new `codex-model-policy` id/package.
- * The vendored `dsh-llm-model-policy` is now `dsh-codex-model-policy`; keep old
- * user profiles bootable without rewriting their patch files.
+ * Drop the logical model policy rows. The desktop now keeps only `fast` (physical
+ * `dsh-llm-pi-ai` + `dsh-fast`); logical `model-policy`/`codex` is not needed
+ * for `muse-spark` and its `model` locale collides with the new `dsh-fast`
+ * composition. Keep old profiles bootable by silently dropping those rows
+ * without rewriting the user's patch file.
  */
-function migrateLegacyModelPolicy(patches: PatchOptions[]): PatchOptions[] {
+function dropModelPolicy(patches: PatchOptions[]): PatchOptions[] {
   return patches.flatMap((patch) => {
     if (Array.isArray(patch.insert)) {
-      const legacyInsert = patch.insert.filter(row => row.id === LEGACY_MODEL_POLICY_ROW_ID
-        && row.name === LEGACY_MODEL_POLICY_PACKAGE)
-      if (legacyInsert.length > 0) {
-        const insert = patch.insert.filter(row => !(row.id === LEGACY_MODEL_POLICY_ROW_ID
-          && row.name === LEGACY_MODEL_POLICY_PACKAGE))
-        const migrated = legacyInsert.map(row => ({
-          id: CODEX_MODEL_POLICY_ROW_ID,
-          name: CODEX_MODEL_POLICY_PACKAGE,
-          ...(row.disabled === undefined ? {} : { disabled: row.disabled }),
-          config: rowConfig(row),
-        }))
-        return [
-          ...(insert.length === 0 ? [] : [{ ...patch, insert }]),
-          ...migrated,
-        ]
-      }
+      const filtered = patch.insert.filter(row => !(
+        (row.id === LEGACY_MODEL_POLICY_ROW_ID && row.name === LEGACY_MODEL_POLICY_PACKAGE)
+        || (row.id === CODEX_MODEL_POLICY_ROW_ID && row.name === CODEX_MODEL_POLICY_PACKAGE)
+      ))
+      if (filtered.length === patch.insert.length) return [patch]
+      return filtered.length === 0 ? [] : [{ ...patch, insert: filtered }]
     }
-    if (patch.id === LEGACY_MODEL_POLICY_ROW_ID && patch.name === LEGACY_MODEL_POLICY_PACKAGE) {
-      return [{
-        id: CODEX_MODEL_POLICY_ROW_ID,
-        name: CODEX_MODEL_POLICY_PACKAGE,
-        ...(patch.disabled === undefined ? {} : { disabled: patch.disabled }),
-        config: rowConfig(patch as unknown as EntryOptions),
-      }]
+    if ((patch.id === LEGACY_MODEL_POLICY_ROW_ID && patch.name === LEGACY_MODEL_POLICY_PACKAGE)
+      || (patch.id === CODEX_MODEL_POLICY_ROW_ID && patch.name === CODEX_MODEL_POLICY_PACKAGE)) {
+      return []
     }
     return [patch]
   })
@@ -396,8 +384,8 @@ export function prepareDesktopProfile(
     loadedHomePatches,
     bareModuleBaseUrl,
   )
-  const homePatches = migrateLegacyModelPolicy(migrateLegacyFirecrawlInsert(filteredHomePatches))
-  const profilePatches = migrateLegacyModelPolicy(migrateLegacyFirecrawlInsert(profile.patches))
+  const homePatches = dropModelPolicy(migrateLegacyFirecrawlInsert(filteredHomePatches))
+  const profilePatches = dropModelPolicy(migrateLegacyFirecrawlInsert(profile.patches))
   const patches: PatchOptions[] = [
     ...bundlePatches,
     ...profilePatches,

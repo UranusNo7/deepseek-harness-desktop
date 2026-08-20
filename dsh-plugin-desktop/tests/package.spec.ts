@@ -117,12 +117,13 @@ describe('published package surface', () => {
     expect(metadata).toContain('Firecrawl provider')
   })
 
-  it('ships the Fast and codex policy vendors and defers to upstream fast', () => {
+  it('ships the Fast and pi-ai vendors and defers to upstream fast', () => {
     expect(manifest.dependencies?.['@deepseek-ai/dsh-fast']).toBe('file:vendor/dsh-fast')
-    expect(manifest.dependencies?.['@deepseek-ai/dsh-codex-model-policy']).toBe(
-      'file:vendor/dsh-codex-model-policy',
+    expect(manifest.dependencies?.['@deepseek-ai/dsh-llm-pi-ai']).toBe(
+      'file:vendor/dsh-llm-pi-ai',
     )
     expect(manifest.dependencies).not.toHaveProperty('@deepseek-ai/dsh-llm-model-policy')
+    expect(manifest.dependencies).not.toHaveProperty('@deepseek-ai/dsh-codex-model-policy')
     const fastManifest = JSON.parse(readFileSync(
       new URL('vendor/dsh-fast/package.json', packageRoot),
       'utf8',
@@ -133,26 +134,24 @@ describe('published package surface', () => {
       types: 'lib/types/index.d.ts',
     }))
     expect(typeof fastManifest.version).toBe('string')
-    const codexManifest = JSON.parse(readFileSync(
-      new URL('vendor/dsh-codex-model-policy/package.json', packageRoot),
+    const piManifest = JSON.parse(readFileSync(
+      new URL('vendor/dsh-llm-pi-ai/package.json', packageRoot),
       'utf8',
     )) as { name?: unknown; main?: unknown; types?: unknown; version?: unknown }
-    expect(codexManifest).toEqual(expect.objectContaining({
-      name: '@deepseek-ai/dsh-codex-model-policy',
+    expect(piManifest).toEqual(expect.objectContaining({
+      name: '@deepseek-ai/dsh-llm-pi-ai',
       main: 'lib/index.js',
       types: 'lib/types/index.d.ts',
     }))
-    expect(typeof codexManifest.version).toBe('string')
+    expect(typeof piManifest.version).toBe('string')
     const fastRuntime = readFileSync(new URL('vendor/dsh-fast/lib/fast.js', packageRoot), 'utf8')
     expect(fastRuntime).toContain('fast/mode')
-    const codexRuntime = readFileSync(new URL('vendor/dsh-codex-model-policy/lib/index.js', packageRoot), 'utf8')
-    expect(codexRuntime).toContain('policy.routes.some')
+    const piRuntime = readFileSync(new URL('vendor/dsh-llm-pi-ai/lib/index.js', packageRoot), 'utf8')
+    expect(piRuntime).toContain('PiAiAdapter')
     const fastCommands = readFileSync(new URL('vendor/dsh-fast/lib/index.js', packageRoot), 'utf8')
     expect(fastCommands).toMatch(/fast/u)
     const patch = readFileSync(new URL('cordis.patch.yml', packageRoot), 'utf8').replaceAll('\r\n', '\n')
-    expect(patch).toContain('id: codex-model-policy')
-    expect(patch).toContain("name: '@deepseek-ai/dsh-codex-model-policy'")
-    expect(patch).toContain('disabled: true')
+    expect(patch).not.toContain('codex-model-policy')
     expect(patch).not.toContain("name: '@deepseek-ai/dsh-llm-model-policy'")
     for (const key of [
       '@deepseek-ai/dsh-sandbox-windows-acl@npm:0.1.0-rc.8',
@@ -235,7 +234,7 @@ describe('published package surface', () => {
       'build/tray-icon.svg',
       'build/tray-icon*.png',
       'vendor/dsh-fast/**',
-      'vendor/dsh-codex-model-policy/**',
+      'vendor/dsh-llm-pi-ai/**',
       'docs/**',
     ]))
     expect(manifest.build?.files).toEqual([

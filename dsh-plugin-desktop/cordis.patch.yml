@@ -15,12 +15,6 @@
     - id: desktop-updates
       name: dsh-plugin-desktop/updates
 
-# The codex model policy is shipped via desktop vendor. It stays disabled until a profile supplies physical routes and logical models.
-- insert:
-    - id: codex-model-policy
-      name: '@deepseek-ai/dsh-codex-model-policy'
-      disabled: true
-
 # A desktop launch has no terminal operator waiting for the Web readiness line.
 - id: web-runtime
   config:

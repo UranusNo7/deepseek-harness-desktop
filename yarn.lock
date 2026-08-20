@@ -1602,33 +1602,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@deepseek-ai/dsh-codex-model-policy@file:vendor/dsh-codex-model-policy::locator=dsh-plugin-desktop%40workspace%3Adsh-plugin-desktop":
-  version: 0.1.0-rc.5
-  resolution: "@deepseek-ai/dsh-codex-model-policy@file:vendor/dsh-codex-model-policy#vendor/dsh-codex-model-policy::hash=71c8ed&locator=dsh-plugin-desktop%40workspace%3Adsh-plugin-desktop"
-  dependencies:
-    "@deepseek-ai/schemastery": "npm:^3.18.1"
-  peerDependencies:
-    "@deepseek-ai/cordis": ^4.0.1
-    "@deepseek-ai/dsh-agent": ^0.1.0-rc.8
-    "@deepseek-ai/dsh-api-remotes": ^0.1.0-rc.8
-    "@deepseek-ai/dsh-attachment": ^0.1.0-rc.8
-    "@deepseek-ai/dsh-client-locale": ^0.1.0-rc.8
-    "@deepseek-ai/dsh-client-runtime": ^0.1.0-rc.8
-    "@deepseek-ai/dsh-client-ui-commands": ^0.1.0-rc.8
-    "@deepseek-ai/dsh-client-ui-conversation": ^0.1.0-rc.8
-    "@deepseek-ai/dsh-client-ui-primitives": ^0.1.0-rc.8
-    "@deepseek-ai/dsh-client-ui-slots": ^0.1.0-rc.8
-    "@deepseek-ai/dsh-fast": ^0.1.0-rc.8
-    "@deepseek-ai/dsh-invariants": ^0.1.0-rc.8
-    "@deepseek-ai/dsh-llm": ^0.1.0-rc.8
-    "@deepseek-ai/dsh-llm-pi-ai": ^0.1.0-rc.8
-    "@deepseek-ai/dsh-session": ^0.1.0-rc.8
-    clsx: ^2.1.1
-    react: ^18.2.0
-  checksum: 10c0/2b0b670451a9f8277f2a0a0d1cce28282e748faa36b8faf4284a257aa187cdd384b924a568aa1e0605016c4dc85e039752adab50b940bc929043f0363189210a
-  languageName: node
-  linkType: hard
-
 "@deepseek-ai/dsh-command-compact@npm:^0.1.0-rc.8":
   version: 0.1.0-rc.8
   resolution: "@deepseek-ai/dsh-command-compact@npm:0.1.0-rc.8"
@@ -6779,7 +6752,6 @@ __metadata:
     "@deepseek-ai/dsh-client-ui-workspace": "npm:0.1.0-rc.8"
     "@deepseek-ai/dsh-cmdline": "npm:0.1.0-rc.8"
     "@deepseek-ai/dsh-code-runtime": "npm:0.1.0-rc.8"
-    "@deepseek-ai/dsh-codex-model-policy": "file:vendor/dsh-codex-model-policy"
     "@deepseek-ai/dsh-command-feedback": "npm:0.1.0-rc.8"
     "@deepseek-ai/dsh-commands": "npm:0.1.0-rc.8"
     "@deepseek-ai/dsh-compaction": "npm:0.1.0-rc.8"

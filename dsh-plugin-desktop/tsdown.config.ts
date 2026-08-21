@@ -34,6 +34,7 @@ export default defineConfig([
     dts: false,
     clean: false,
     sourcemap: true,
+    external: ['open', 'electron'],
   },
   {
     name: `${PACKAGE_NAME}/bin`,
@@ -46,6 +47,7 @@ export default defineConfig([
     dts: false,
     clean: false,
     sourcemap: true,
+    external: ['open', 'electron'],
     outputOptions: {
       banner: '#!/usr/bin/env node',
     },

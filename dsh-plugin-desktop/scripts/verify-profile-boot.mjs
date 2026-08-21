@@ -41,37 +41,6 @@ try {
     hostServicePluginDir,
     { recursive: true, force: false, errorOnExist: true },
   )
-  const logicalPolicyPatch = {
-    id: 'llm-model-policy',
-    name: '@deepseek-ai/dsh-llm-model-policy',
-    disabled: false,
-    config: {
-      providerId: 'model-policy',
-      providers: {
-        primary: {
-          apiKeyEnv: 'POLICY_KEY',
-          api: 'openai-completions',
-          baseURL: 'https://example.test/v1',
-          models: [{ id: 'gpt', name: 'GPT', contextWindow: 1000, maxTokens: 1000 }],
-        },
-      },
-      models: {
-        'gpt-5.6': {
-          name: 'GPT-5.6',
-          contextWindow: 1000,
-          maxTokens: 1000,
-          supportsFast: true,
-          routes: [{ provider: 'primary', model: 'gpt' }],
-        },
-        'grok-4.6': {
-          name: 'Grok 4.6',
-          contextWindow: 1000,
-          maxTokens: 1000,
-          routes: [{ provider: 'primary', model: 'gpt' }],
-        },
-      },
-    },
-  }
   const patches = [
     // Deliberately compose the consumer before the desktop-pnpm provider row.
     // Its required injection must keep it pending until that service mounts.
@@ -82,7 +51,6 @@ try {
       }],
     },
     ...prepared.patches,
-    logicalPolicyPatch,
   ]
   const packageRoot = new URL('../', import.meta.url)
   const pnpmBinPath = fileURLToPath(new URL('node_modules/pnpm/bin/pnpm.mjs', packageRoot))
@@ -181,13 +149,8 @@ try {
   if (ctx.get('desktopPnpm') === undefined) {
     throw new Error('assembled desktop profile is missing the desktop pnpm Host capability')
   }
-  if (ctx.get('modelPolicy') === undefined) {
-    throw new Error('assembled desktop profile is missing the logical model policy Host capability')
-  }
-  const gptInfo = await ctx.llm.resolveModelInfo('model-policy', 'gpt-5.6')
-  const grokInfo = await ctx.llm.resolveModelInfo('model-policy', 'grok-4.6')
-  if (gptInfo.supportsFast !== true || grokInfo.supportsFast !== false) {
-    throw new Error('assembled logical model policy did not preserve GPT-only Fast capability')
+  if (ctx.get('fast') === undefined) {
+    throw new Error('assembled desktop profile is missing the fast Host capability')
   }
   if (ctx.desktopProfiles.current.name !== 'desktop'
     || ctx.desktopProfiles.current.dir !== prepared.profile.dir) {

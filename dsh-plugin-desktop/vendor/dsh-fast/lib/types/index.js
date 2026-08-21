@@ -70,45 +70,45 @@ export function apply(ctx) {
     ctx.effect(() => ctx.on('agent/request', ({ agent }, next) => requestWithFastMode(agent, next)), 'fast: tier injection');
     // Human command is optional: the plugin works without it, but when
     // `ctx.commands` is composed the user can toggle Fast without the UI.
-    const commands = ctx.get?.('commands');
-    if (commands !== undefined) {
-        ctx.effect(function* () {
-            yield commands.register({
-                name: 'fast',
-                description: 'Toggle Fast mode (usage: /fast [on|off|status])',
-                handler: async (invocation) => {
-                    const agent = invocation.agent;
-                    if (agent === undefined)
-                        return { kind: 'error', text: 'Fast mode is only available inside a session.' };
-                    const raw = invocation.rawInput.trim().toLowerCase();
-                    const current = foldFastMode(agent.session.events) === true;
-                    if (raw === '' || raw === 'toggle') {
-                        const next = !current;
-                        controller.setFast(agent, next);
-                        return { kind: 'success', text: `Fast mode ${next ? 'enabled' : 'disabled'}.` };
-                    }
-                    if (raw === 'on' || raw === 'enable' || raw === '1' || raw === 'true') {
-                        if (current)
-                            return { kind: 'success', text: 'Fast mode is already enabled.' };
-                        controller.setFast(agent, true);
-                        return { kind: 'success', text: 'Fast mode enabled.' };
-                    }
-                    if (raw === 'off' || raw === 'disable' || raw === '0' || raw === 'false') {
-                        if (!current)
-                            return { kind: 'success', text: 'Fast mode is already disabled.' };
-                        controller.setFast(agent, false);
-                        return { kind: 'success', text: 'Fast mode disabled.' };
-                    }
-                    if (raw === 'status' || raw === 'show') {
-                        return { kind: 'success', text: `Fast mode is ${current ? 'enabled' : 'disabled'}.` };
-                    }
-                    return {
-                        kind: 'error',
-                        text: 'Usage: /fast [on|off|status] — bare /fast toggles.',
-                    };
-                },
-            });
-        }, 'fast: /fast command');
-    }
+    ctx.effect(function* () {
+        const commands = ctx.get?.('commands');
+        if (commands === undefined)
+            return;
+        yield commands.register({
+            name: 'fast',
+            description: 'Toggle Fast mode (usage: /fast [on|off|status])',
+            handler: async (invocation) => {
+                const agent = invocation.agent;
+                if (agent === undefined)
+                    return { kind: 'error', text: 'Fast mode is only available inside a session.' };
+                const raw = invocation.rawInput.trim().toLowerCase();
+                const current = foldFastMode(agent.session.events) === true;
+                if (raw === '' || raw === 'toggle') {
+                    const next = !current;
+                    controller.setFast(agent, next);
+                    return { kind: 'success', text: `Fast mode ${next ? 'enabled' : 'disabled'}.` };
+                }
+                if (raw === 'on' || raw === 'enable' || raw === '1' || raw === 'true') {
+                    if (current)
+                        return { kind: 'success', text: 'Fast mode is already enabled.' };
+                    controller.setFast(agent, true);
+                    return { kind: 'success', text: 'Fast mode enabled.' };
+                }
+                if (raw === 'off' || raw === 'disable' || raw === '0' || raw === 'false') {
+                    if (!current)
+                        return { kind: 'success', text: 'Fast mode is already disabled.' };
+                    controller.setFast(agent, false);
+                    return { kind: 'success', text: 'Fast mode disabled.' };
+                }
+                if (raw === 'status' || raw === 'show') {
+                    return { kind: 'success', text: `Fast mode is ${current ? 'enabled' : 'disabled'}.` };
+                }
+                return {
+                    kind: 'error',
+                    text: 'Usage: /fast [on|off|status] — bare /fast toggles.',
+                };
+            },
+        });
+    }, 'fast: /fast command');
 }
 //# sourceMappingURL=index.js.map

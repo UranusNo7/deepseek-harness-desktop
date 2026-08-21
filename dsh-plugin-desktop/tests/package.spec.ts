@@ -165,12 +165,17 @@ describe('published package surface', () => {
     for (const key of [
       '@deepseek-ai/dsh-llm@npm:0.1.0-rc.8',
       '@deepseek-ai/dsh-llm-pi-ai@npm:0.1.0-rc.8',
-      '@deepseek-ai/dsh-host-apiproxy@npm:0.1.0-rc.8',
-      '@deepseek-ai/dsh-api-remotes@npm:0.1.0-rc.8',
       '@deepseek-ai/dsh-client-ui-model-selection@npm:0.1.0-rc.8',
       '@deepseek-ai/dsh-client-connection@npm:0.1.0-rc.8',
     ]) {
       expect(workspaceManifest.resolutions?.[key]).toBeUndefined()
+    }
+    for (const key of [
+      '@deepseek-ai/dsh-host-apiproxy@npm:0.1.0-rc.8',
+      '@deepseek-ai/dsh-api-remotes@npm:0.1.0-rc.8',
+      '@deepseek-ai/dsh-session@npm:0.1.0-rc.8',
+    ]) {
+      expect(workspaceManifest.resolutions?.[key]).toBeTypeOf('string')
     }
   })
 

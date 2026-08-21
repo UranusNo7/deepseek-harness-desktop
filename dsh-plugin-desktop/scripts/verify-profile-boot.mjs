@@ -207,7 +207,7 @@ try {
   if (response.status !== 200) {
     throw new Error(`assembled Web root returned HTTP ${String(response.status)}`)
   }
-  const bootMatch = html.match(/window\.__DSH_BOOT__ = (\{.*?\})<\/script>/u)
+  const bootMatch = html.match(/(?:window|globalThis)(?:\["'?__DSH_BOOT__"'?\]|\.__DSH_BOOT__) = (\{.*?\})<\/script>/u)
   if (bootMatch?.[1] === undefined) {
     throw new Error('assembled Web root is missing window.__DSH_BOOT__')
   }

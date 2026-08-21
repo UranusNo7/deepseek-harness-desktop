@@ -154,26 +154,27 @@ describe('published package surface', () => {
     expect(patch).not.toContain('codex-model-policy')
     expect(patch).not.toContain("name: '@deepseek-ai/dsh-llm-model-policy'")
     for (const key of [
-      '@deepseek-ai/dsh-sandbox-windows-acl@npm:0.1.0-rc.8',
-      '@deepseek-ai/dsh-sandbox-windows-acl@npm:^0.1.0-rc.8',
-      '@deepseek-ai/dsh-tool-pwsh@npm:^0.1.0-rc.8',
-      '@deepseek-ai/dsh-session@npm:0.1.0-rc.8',
-      '@deepseek-ai/dsh-session@npm:^0.1.0-rc.8',
+      '@deepseek-ai/dsh-sandbox-windows-acl@npm:0.1.1-rc.2',
+      '@deepseek-ai/dsh-sandbox-windows-acl@npm:^0.1.1-rc.2',
+      '@deepseek-ai/dsh-tool-pwsh@npm:^0.1.1-rc.2',
+      '@deepseek-ai/dsh-session@npm:0.1.1-rc.2',
+      '@deepseek-ai/dsh-session@npm:^0.1.1-rc.2',
+      '@deepseek-ai/dsh-client-connection@npm:0.1.1-rc.2',
+      '@deepseek-ai/dsh-client-connection@npm:^0.1.1-rc.2',
     ]) {
       expect(workspaceManifest.resolutions?.[key]).toBeTypeOf('string')
     }
     for (const key of [
-      '@deepseek-ai/dsh-llm@npm:0.1.0-rc.8',
-      '@deepseek-ai/dsh-llm-pi-ai@npm:0.1.0-rc.8',
-      '@deepseek-ai/dsh-client-ui-model-selection@npm:0.1.0-rc.8',
-      '@deepseek-ai/dsh-client-connection@npm:0.1.0-rc.8',
+      '@deepseek-ai/dsh-llm@npm:0.1.1-rc.2',
+      '@deepseek-ai/dsh-llm-pi-ai@npm:0.1.1-rc.2',
+      '@deepseek-ai/dsh-client-ui-model-selection@npm:0.1.1-rc.2',
     ]) {
       expect(workspaceManifest.resolutions?.[key]).toBeUndefined()
     }
     for (const key of [
-      '@deepseek-ai/dsh-host-apiproxy@npm:0.1.0-rc.8',
-      '@deepseek-ai/dsh-api-remotes@npm:0.1.0-rc.8',
-      '@deepseek-ai/dsh-session@npm:0.1.0-rc.8',
+      '@deepseek-ai/dsh-host-apiproxy@npm:0.1.1-rc.2',
+      '@deepseek-ai/dsh-api-remotes@npm:0.1.1-rc.2',
+      '@deepseek-ai/dsh-session@npm:0.1.1-rc.2',
     ]) {
       expect(workspaceManifest.resolutions?.[key]).toBeTypeOf('string')
     }
@@ -384,9 +385,9 @@ describe('published package surface', () => {
   })
 
   it('starts restricted Windows shells with a hidden console show state', () => {
-    const patchResolution = 'patch:@deepseek-ai/dsh-sandbox-windows-acl@npm%3A0.1.0-rc.8#./patches/dsh-sandbox-windows-acl@0.1.0-rc.8.patch'
+    const patchResolution = 'patch:@deepseek-ai/dsh-sandbox-windows-acl@npm%3A0.1.1-rc.2#./patches/dsh-sandbox-windows-acl@0.1.1-rc.2.patch'
     const lockfile = readFileSync(new URL('yarn.lock', workspaceRoot), 'utf8')
-    const patch = readFileSync(new URL('patches/dsh-sandbox-windows-acl@0.1.0-rc.8.patch', workspaceRoot), 'utf8')
+    const patch = readFileSync(new URL('patches/dsh-sandbox-windows-acl@0.1.1-rc.2.patch', workspaceRoot), 'utf8')
     const workspaceRequire = createRequire(new URL('package.json', packageRoot))
     const sandboxManifest = workspaceRequire.resolve('@deepseek-ai/dsh-sandbox-windows-acl/package.json')
     let sandboxLocalManifest: string | undefined
@@ -400,15 +401,15 @@ describe('published package surface', () => {
     const runtimeChunks = readdirSync(sandboxLib).filter(name => /^types-.*\.js$/u.test(name))
 
     expect(workspaceManifest.resolutions).toMatchObject({
-      '@deepseek-ai/dsh-sandbox-windows-acl@npm:0.1.0-rc.8': patchResolution,
-      '@deepseek-ai/dsh-sandbox-windows-acl@npm:^0.1.0-rc.8': patchResolution,
+      '@deepseek-ai/dsh-sandbox-windows-acl@npm:0.1.1-rc.2': patchResolution,
+      '@deepseek-ai/dsh-sandbox-windows-acl@npm:^0.1.1-rc.2': patchResolution,
     })
     if (sandboxLocalManifest !== undefined) {
       const sandboxLocalRequire = createRequire(sandboxLocalManifest)
       expect(sandboxLocalRequire.resolve('@deepseek-ai/dsh-sandbox-windows-acl/package.json'))
         .toBe(sandboxManifest)
     }
-    expect(lockfile).toContain('@deepseek-ai/dsh-sandbox-windows-acl@patch:@deepseek-ai/dsh-sandbox-windows-acl@npm%3A0.1.0-rc.8#./patches/dsh-sandbox-windows-acl@0.1.0-rc.8.patch')
+    expect(lockfile).toContain('@deepseek-ai/dsh-sandbox-windows-acl@patch:@deepseek-ai/dsh-sandbox-windows-acl@npm%3A0.1.1-rc.2#./patches/dsh-sandbox-windows-acl@0.1.1-rc.2.patch')
     expect(patch.match(/^\+\s*dwFlags: 257,\r?$/gmu)).toHaveLength(2)
     expect(patch.match(/^\+\s*wShowWindow: 0,\r?$/gmu)).toHaveLength(2)
     expect(runtimeChunks).toHaveLength(1)
@@ -420,3 +421,5 @@ describe('published package surface', () => {
     expect(installedRuntime).not.toContain('134217728')
   })
 })
+
+

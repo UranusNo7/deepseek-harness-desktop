@@ -407,3 +407,28 @@
 - 子模块 `pr-drive-quick-switch` 分支（推送至 fork）：cherry-pick 提交 + `.agents/notes/implemented/feature/2026-08-21-directory-picker-drive-quick-switch.{md,zh.md,i18n.yaml}`；未改变外层记录的子模块指针。
 - 外层仓库：提交 `bd883875ef` 已推送 origin/master。
 回滚方式：删除 fork 上 `pr-drive-quick-switch` 分支即可撤回 PR 候选；本地 `git -C deepseek-harness branch -D pr-drive-quick-switch` 与 `remote remove official/fork` 清理现场。
+
+## 2026-08-22 - Task: 同步上游 master（0.1.1-rc.2）并迁移桌面补丁
+
+### What was done
+
+- 子模块：从官方 `deepseek-ai/deepseek-harness` master（领先 rc.8 共 207 提交）合并进 fork——冲突仅 3 文件（llm-pi-ai adapter 双方保留、两份生成目录文档重新生成）；合并后修复四类适配问题：agent-loop 不变量采纳上游简化并保留 serviceTier 检查、llm-pi-ai 根导出面对齐上游（resolveProfiles 改经 `PiAiAdapter.resolveProfiles` 静态工厂供 per-tier 策略插件使用、auth 注入助手加入根面）、codex-model-policy 补 auth 注入、浏览器插件测试固定 zh locale。全量测试 14041 用例通过。
+- 桌面层 rc.2 迁移：根与桌面 manifest 全部版本 `0.1.0-rc.8 → 0.1.1-rc.2`；10 个补丁全部基于 npm rc.2 原包 × 合并后子模块构建重新生成（sandbox-windows-acl 直接采用官方桌面同版本补丁以保留 dwFlags 控制台隐藏修复）；`.yarnrc.yml` 关闭 `npmMinimalAgeGate`（fork 需第一时间安装自家上游发布）；`verify-profile-boot` 正则适配上游 `globalThis["__DSH_BOOT__"]` 新注入格式；package.spec 版本键更新且 connection 移入已打补丁断言组。
+- 验证：桌面 build/typecheck/test 全绿（296/296）；`verify:profile` 无头引导 rc.2 完整栈通过（42 模块行含 browse 盘符选择器，无 layout/native 行）。
+- 子模块同步分支已推送 fork main（`b6067dc36d`）；`upstream.json` 指向该提交与 rc.2。
+
+### Testing
+
+- 上游全量 `pnpm run test`：841 文件 / 14041 用例全部通过（修复 8 个失败文件后）。
+- 桌面链路：build ✓ typecheck ✓ vitest 296/296 ✓ verify:profile ✓。
+
+### Notes
+
+改动文件清单：
+- `deepseek-harness`：子模块指针 `88556303aa → b6067dc36d`（同步分支已推送 fork main）。
+- `patches/*@0.1.1-rc.2.patch`：10 个补丁全部重生成/改名（旧 rc.8 补丁删除）；其中 sandbox-windows-acl 取官方桌面版本。
+- `package.json` / `dsh-plugin-desktop/package.json` / `upstream.json` / `yarn.lock`：rc.2 版本与补丁引用迁移。
+- `.yarnrc.yml`：新增 `npmMinimalAgeGate: 0`（覆盖全局 24h 发布隔离，理由见文件注释）。
+- `dsh-plugin-desktop/scripts/verify-profile-boot.mjs`：boot 注入正则兼容 `globalThis["__DSH_BOOT__"]`。
+- `dsh-plugin-desktop/tests/package.spec.ts`：版本键更新 + connection 断言移入已打补丁组。
+回滚方式：`git checkout HEAD~1 -- .` 恢复外层全部文件后重跑 `corepack yarn install`；子模块 `git checkout 88556303aa && git push origin +88556303aa:main` 并将 upstream.json 指回；应用关闭后重打包即回到 rc.8 状态。

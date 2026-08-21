@@ -7712,3 +7712,25 @@ index 0000000000000000000000000000000000000000..7274bdbde491116945768e3dbc9e1121
 @@ -0,0 +1 @@
 +{"version":3,"file":"invariant.js","sourceRoot":"","sources":["../../src/invariant.ts"],"names":[],"mappings":"AAAA;;;GAGG;AAWH,MAAM,YAAY,GAAG,iCAAiC,CAAA;AAEtD,oCAAoC;AACpC,MAAM,CAAC,MAAM,IAAI,GAAG,0BAA0B,CAAA;AAC9C,0DAA0D;AAC1D,MAAM,CAAC,MAAM,MAAM,GAAG,CAAC,YAAY,CAAC,CAAA;AAEpC;;;;;GAKG;AACH,MAAM,OAAO,GAAuB,CAAC,GAAG,EAAE,IAAI,EAAE,EAAE;IAChD,GAAG,CAAC,EAAE,CAAC,mBAAmB,EAAE,CAAC,KAAK,EAAE,SAAS,EAAE,IAAI,EAAE,EAAE;QACrD,IAAI,SAAS,KAAK,eAAe;YAAE,OAAM;QACzC,MAAM,GAAG,GAAY,IAAI,CAAC,CAAC,CAAC,CAAA;QAC5B,IAAI,OAAO,GAAG,KAAK,QAAQ,IAAI,GAAG,KAAK,EAAE,EAAE,CAAC;YAC1C,IAAI,CAAC,wDAAwD,CAAC,CAAA;YAC9D,OAAM;QACR,CAAC;QACD,MAAM,KAAK,GAAG,GAAG,CAAC,GAAG,CAAC,OAAO,CAAC,CAAA;QAC9B,uEAAuE;QACvE,yEAAyE;QACzE,IAAI,KAAK,KAAK,SAAS,IAAI,KAAK,CAAC,UAAU,CAAC,GAA6B,CAAC,KAAK,CAAC,EAAE,CAAC;YACjF,IAAI,CAAC,8BAA8B,GAAG,sFAAsF,CAAC,CAAA;QAC/H,CAAC;IACH,CAAC,EAAE,EAAE,MAAM,EAAE,IAAI,EAAE,CAAC,CAAA;AACtB,CAAC,CAAA;AAED;;;;GAIG;AACH,MAAM,CAAC,MAAM,KAAK,GAAG,CAAC,GAAY,EAAuB,EAAE,CACzD,OAAO,CAAC,OAAO,CAAC,GAAG,CAAC,UAAU,CAAC,QAAQ,CAAC,YAAY,EAAE,OAAO,CAAC,CAAC,CAAA;AACjE,sBAAsB"}
 \ No newline at end of file
+diff --git a/lib/client.js b/lib/client.js
+index ba3cb21f72..dfa233a1a4 100644
+--- a/lib/client.js
++++ b/lib/client.js
+@@ -9982,6 +9982,17 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
+ 				return response.result.value.path;
+ 			}
+ 			/**
++			* List filesystem roots (drive letters on Windows) through the Host's
++			* `browse` capability. Used by the in-app browser's drive quick-switch.
++			* @param signal - aborts the wire request and the Host enumeration.
++			* @returns the available root entries.
++			*/
++			async listFilesystemRoots(signal) {
++				const response = await this.api.host.listFilesystemRoots({}, signal);
++				if (!response.result.ok) throw new DirectoryBrowseError(response.result.error);
++				return response.result.value.roots;
++			}
++			/**
+ 			* Open a filesystem path with the Host operating system's default application.
+ 			* @param path - absolute or host-resolvable path.
+ 			*/

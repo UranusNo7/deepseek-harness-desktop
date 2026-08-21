@@ -312,3 +312,77 @@
 - `D:\DSHDesktop\...\resources\app.asar.unpacked`：`cordis.patch.yml`/`lib/profile.js`/`lib/index.js`/`node_modules/@deepseek-ai/dsh-fast` 已热补，`profiles/node_modules/@deepseek-ai/dsh-fast` 重链后 `lib/index.js` 含 `fast: /fast command`。
 - `.yarn/patches/@deepseek-ai-dsh-session-npm-0.1.0-rc.8-21ccff0e0d.patch`：`yarn patch-commit` 产物已复制到 `./patches/` 并保留，`yarn.lock` 同时含 `~/.yarn/patches` 与 `./patches` 两条（同哈希 `313a1c`），下次 `dedupe` 可收敛。
 - 回滚点：`git revert fb0ccec2ed`（桌面）与 `git -C deepseek-harness revert c0ca0e4ba4`（上游），删除 `patches/dsh-session@0.1.0-rc.8.patch` 并 `git checkout HEAD~1 -- upstream.json yarn.lock`，`git submodule update --init` 回 `b3ab3d`，热补的 `app.asar.unpacked` 按 `git diff` 反向应用。
+
+## 2026-08-22 - Task: 修复「添加工作区」点击无反应（盘符快切同步遗漏构建）
+
+### What was done
+
+- 定位根因：上游 `88556303`（Windows 盘符快切）提交后，前一轮只重建了部分包——`dsh-client-runtime` 的浏览器端打包 `lib/client.js` 仍是 8 月 20 日旧构建，导致 `WorkspaceRuntime.listFilesystemRoots` 缺失；而 `ui-directory-picker-browse` 新代码在打开目录对话框时同步调用该方法，抛 TypeError 使 React 卸载对话框树，表现为点「添加工作区」毫无反应。
+- 补齐构建链：在上游子模块重跑 `pnpm run build:lib:client`，重建 `dsh-client-runtime`、`dsh-client-ui-directory-picker-browse`（连带 `api/remotes`、`connection` 等客户端 face 全部刷新）。
+- 用 `yarn patch` + stdout 捕获方式重新生成干净的单层补丁，覆盖 `patches/dsh-client-runtime@0.1.0-rc.8.patch` 与 `patches/dsh-client-ui-directory-picker-browse@0.1.0-rc.8.patch`；期间 `patch-commit -s` 曾把分层补丁写进根与桌面两处 manifest/锁文件，已全部还原为指向 `./patches` 的原结构。
+- 因桌面应用正在运行（即当前对话宿主）无法关闭重打包，按既有「热补」先例将两个包的 `lib/client.js`(+map) 直接覆盖进 `dist\win-unpacked\resources\app.asar.unpacked\node_modules\@deepseek-ai\` 对应包目录；profile 镜像 junction 指向该目录，应用下次启动即加载修复后的代码。完整重打包（`yarn package:dir`）留待应用可关闭时执行。
+
+### Testing
+
+- 上游聚焦测试：`vitest run packages/client/ui-directory-picker-browse packages/client/runtime` → 26 个测试文件、440 个用例全部通过（含盘符快切换用例）。
+- 内容验证：仓库新构建、桌面 `node_modules` 安装副本、`dist\win-unpacked` 热补副本、`$DSH_HOME/profiles/node_modules` junction 视图四处 `lib/client.js` 哈希一致，且均含完整的 `async listFilesystemRoots(signal)` 方法体与 browse 侧注入调用。
+
+### Notes
+
+改动文件清单：
+- `patches/dsh-client-runtime@0.1.0-rc.8.patch`：重新生成，新增 `lib/client.js` 的 `listFilesystemRoots` 完整 hunk（此前补丁只有类型面改动）。
+- `patches/dsh-client-ui-directory-picker-browse@0.1.0-rc.8.patch`：重新生成，对齐最终提交的 DirectoryBrowser（含 driveBar）与 flow 改动。
+- `yarn.lock`：两条补丁描述符校验和随补丁内容更新。
+- `dsh-plugin-desktop/dist/win-unpacked/resources/app.asar.unpacked/node_modules/@deepseek-ai/{dsh-client-runtime,dsh-client-ui-directory-picker-browse}/lib/client.js`(.map)：热补覆盖（未跟踪的打包产物）。
+- `deepseek-harness/packages/*/lib/**`：上游重建产物（gitignore 内，不入库）。
+回滚方式：`git checkout HEAD -- patches/dsh-client-runtime@0.1.0-rc.8.patch patches/dsh-client-ui-directory-picker-browse@0.1.0-rc.8.patch yarn.lock` 后重跑 `corepack yarn install`；热补文件在应用关闭后用 `corepack yarn package:dir` 重打包即可整体还原为补丁产物状态。
+
+## 2026-08-22 - Task: 修复热补引入的启动白屏（回退为外科手术式补丁）
+
+### What was done
+
+- 上一轮的全量重建把上游 rc.8 之后所有未随桌面发布的客户端改动（fast/scope 等）一并带进了 `dsh-client-runtime` 的 `lib/client.js`，桌面渲染器加载插件失败，触发「Plugin Recovery」报错与「回退 last-known-good profile」提示，窗口白屏。
+- 改为外科手术式修复：以 npm 原版 rc.8 的 `lib/client.js` 为基底，仅插入 `WorkspaceRuntime.listFilesystemRoots` 一个方法（与上游提交中该方法逐字一致），把对应 hunk 追加回原 `patches/dsh-client-runtime@0.1.0-rc.8.patch`（净增 22 行）。
+- `patches/dsh-client-ui-directory-picker-browse@0.1.0-rc.8.patch` 恢复为仓库原有版本（其产出的 browse 包含盘符栏且经 23:50 实机启动验证），不再使用全量重建版。
+- `corepack yarn install` 重装后，将两个包的 `lib/client.js`(+map) 重新热补进 `dist\win-unpacked`，恢复到与 23:50 可用状态仅差「runtime 多一个方法」的最小增量。
+
+### Testing
+
+- 沙箱求值验证：dist 中两个客户端行在模拟模块表中工厂求值均通过；runtime 导出 36 项与原版一致，`WorkspaceRuntime.prototype.listFilesystemRoots` 为 function。
+- 结构比对：新 runtime 包与 npm 原版导出面、外部依赖请求完全一致（仅多一个方法）；browse 包与 23:50 实机验证过的 yarn 安装产物哈希一致。
+- `corepack yarn install` 以当前补丁集通过（lockfile 校验和同步）。
+
+### Notes
+
+改动文件清单：
+- `patches/dsh-client-runtime@0.1.0-rc.8.patch`：仅追加 `lib/client.js` 单方法 hunk（净 +22 行）；注意文件现为混合换行符（追加段 CRLF），后续如再编辑建议统一 LF。
+- `patches/dsh-client-ui-directory-picker-browse@0.1.0-rc.8.patch`：恢复为 HEAD 原版（上一轮的全量重生成已撤销）。
+- `yarn.lock`：runtime 补丁描述符校验和更新。
+- `dsh-plugin-desktop/dist/win-unpacked/.../@deepseek-ai/{dsh-client-runtime,dsh-client-ui-directory-picker-browse}/lib/client.js`(.map)：按上述补丁产物重新热补（未跟踪产物）。
+- `deepseek-harness/packages/*/lib/**`：全量重建产物保留在 gitignore 内，不再进入桌面链路。
+回滚方式：`git checkout HEAD -- patches/dsh-client-runtime@0.1.0-rc.8.patch yarn.lock` 并重跑 `corepack yarn install`；应用关闭后 `corepack yarn package:dir` 重打包即回到无盘符功能的原始 rc.8 状态。
+
+## 2026-08-22 - Task: 补齐 dsh-client-connection 客户端声明（盘符功能最终修复）
+
+### What was done
+
+- 定位最后缺口：上游提交对 `dsh-client-connection` 只更新了测试 fixture，而真正的客户端声明（响应 schema、`callUnary` 绑定、分发 case）位于 `apiproxy/src/fetch/client.ts`，由 connection 包构建时内联——上游源码本身完整，缺的是桌面链路从未重建/补丁 connection 包，导致 `api.host.listFilesystemRoots` 在真机为 undefined，点「添加工作区」依旧无反应。
+- 全量重建 `dsh-client-connection` 并与发布版逐 hunk 比对：仅 5 处差异、全部为盘符功能本身（schema 定义、schema 表条目、API 绑定、fixture 假实现、in-process 分发 case），无其他漂移，安全可用。
+- 以 yarn patch 流程生成 `patches/dsh-client-connection@0.1.0-rc.8.patch`，根 `package.json` resolutions 新增对应两条，`yarn.lock` 同步；将新 `lib/client.js`(+map) 热补进 `dist\win-unpacked`。
+- 实机验证：应用正常启动，「添加工作区」对话框出现完整盘符快切（驱动器 C:/D:/F: 快捷胶囊 + 「此电脑」虚拟层级面包屑），功能验收通过。
+
+### Testing
+
+- 差异审计：pristine rc.8 与重建产物 diff 仅 5 个 hunk，导出面一致（5=5），无未授权改动。
+- 链路验证：dist 中 connection/runtime/browse 三包均含新方法；探针窗口实测页面完整渲染。
+- 用户实机确认：重启后功能正常（截图含驱动器栏与「此电脑」面包屑）。
+
+### Notes
+
+改动文件清单：
+- `patches/dsh-client-connection@0.1.0-rc.8.patch`：新增，connection 客户端面盘符声明（含构建漂移的 types/map 文件）。
+- `package.json`：resolutions 新增 `dsh-client-connection@npm:0.1.0-rc.8`/`^0.1.0-rc.8` 两条补丁指向。
+- `yarn.lock`：connection 补丁描述符与校验和。
+- `dsh-plugin-desktop/dist/win-unpacked/.../@deepseek-ai/dsh-client-connection/lib/client.js`(.map)：热补覆盖（未跟踪产物）。
+- `dsh-plugin-desktop/package.json`：仅含上一轮遗留的 `npmRebuild: false`（未提交，非本轮改动）。
+回滚方式：删除 `patches/dsh-client-connection@0.1.0-rc.8.patch` 并还原 `package.json`/`yarn.lock` 中 connection 相关两条后重跑 `corepack yarn install`；应用关闭后重打包即回到无盘符状态。

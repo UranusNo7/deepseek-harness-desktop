@@ -30,7 +30,9 @@
     "@deepseek-ai/dsh-api-remotes@npm:0.1.0-rc.8": "patch:@deepseek-ai/dsh-api-remotes@npm%3A0.1.0-rc.8#./patches/dsh-api-remotes@0.1.0-rc.8.patch",
     "@deepseek-ai/dsh-api-remotes@npm:^0.1.0-rc.8": "patch:@deepseek-ai/dsh-api-remotes@npm%3A0.1.0-rc.8#./patches/dsh-api-remotes@0.1.0-rc.8.patch",
     "@deepseek-ai/dsh-client-runtime@npm:0.1.0-rc.8": "patch:@deepseek-ai/dsh-client-runtime@npm%3A0.1.0-rc.8#./patches/dsh-client-runtime@0.1.0-rc.8.patch",
-    "@deepseek-ai/dsh-client-runtime@npm:^0.1.0-rc.8": "patch:@deepseek-ai/dsh-client-runtime@npm%3A0.1.0-rc.8#./patches/dsh-client-runtime@0.1.0-rc.8.patch"
+    "@deepseek-ai/dsh-client-runtime@npm:^0.1.0-rc.8": "patch:@deepseek-ai/dsh-client-runtime@npm%3A0.1.0-rc.8#./patches/dsh-client-runtime@0.1.0-rc.8.patch",
+    "@deepseek-ai/dsh-client-connection@npm:0.1.0-rc.8": "patch:@deepseek-ai/dsh-client-connection@npm%3A0.1.0-rc.8#./patches/dsh-client-connection@0.1.0-rc.8.patch",
+    "@deepseek-ai/dsh-client-connection@npm:^0.1.0-rc.8": "patch:@deepseek-ai/dsh-client-connection@npm%3A0.1.0-rc.8#./patches/dsh-client-connection@0.1.0-rc.8.patch"
   },
   "dependenciesMeta": {
     "@deepseek-ai/dsh-subprocess-local": {

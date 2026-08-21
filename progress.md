@@ -386,3 +386,24 @@
 - `dsh-plugin-desktop/dist/win-unpacked/.../@deepseek-ai/dsh-client-connection/lib/client.js`(.map)：热补覆盖（未跟踪产物）。
 - `dsh-plugin-desktop/package.json`：仅含上一轮遗留的 `npmRebuild: false`（未提交，非本轮改动）。
 回滚方式：删除 `patches/dsh-client-connection@0.1.0-rc.8.patch` 并还原 `package.json`/`yarn.lock` 中 connection 相关两条后重跑 `corepack yarn install`；应用关闭后重打包即回到无盘符状态。
+
+## 2026-08-22 - Task: 推送 GitHub 并准备官方 PR
+
+### What was done
+
+- 外层仓库提交本轮全部修复（runtime/connection 补丁、resolutions、yarn.lock、progress 日志）并推送 `UranusNo7/deepseek-harness-desktop` master（`fac63017..bd883875`）；子模块 fork main 此前已含 `88556303`。
+- 官方 PR 准备：为子模块添加 `official`（`deepseek-ai/deepseek-harness`，master）与 `fork` 远端；从官方 master 建 `pr-drive-quick-switch` 分支并干净 cherry-pick `88556303`（仅 `api-proxy.ts` 与 browse README 两文件自动合并，25 文件无冲突）。
+- 按官方规范补齐 Agent Note 三件套（EN/ZH/i18n.yaml sidecar，经 `verify-translation-pairing --write` 记录哈希）：问题、决策、三方案否决理由、后果与能力缝交叉链接；分支上四个相关包聚焦测试 927 用例全绿。
+- 分支已推送至 `UranusNo7/deepseek-harness`；`gh pr create` 因 fine-grained PAT 无 deepseek-ai 组织授权被拒，已生成预填标题/正文的 compare 链接存于桌面 `create-pr-url.txt`，由用户浏览器一键创建。子模块工作区已切回 `88556303aa` 保持外层指针一致。
+
+### Testing
+
+- cherry-pick 后分支：`vitest run packages/client/ui-directory-picker-browse packages/client/runtime packages/host/apiproxy packages/client/connection` → 56 文件 / 927 用例全部通过。
+- Agent Note 通过 `verify-translation-pairing` 配对记录；格式遵循 implemented 生命周期骨架（Problem/Decision/Alternatives considered/Consequences/Related）。
+
+### Notes
+
+改动文件清单：
+- 子模块 `pr-drive-quick-switch` 分支（推送至 fork）：cherry-pick 提交 + `.agents/notes/implemented/feature/2026-08-21-directory-picker-drive-quick-switch.{md,zh.md,i18n.yaml}`；未改变外层记录的子模块指针。
+- 外层仓库：提交 `bd883875ef` 已推送 origin/master。
+回滚方式：删除 fork 上 `pr-drive-quick-switch` 分支即可撤回 PR 候选；本地 `git -C deepseek-harness branch -D pr-drive-quick-switch` 与 `remote remove official/fork` 清理现场。

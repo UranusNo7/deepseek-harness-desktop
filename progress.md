@@ -432,3 +432,24 @@
 - `dsh-plugin-desktop/scripts/verify-profile-boot.mjs`：boot 注入正则兼容 `globalThis["__DSH_BOOT__"]`。
 - `dsh-plugin-desktop/tests/package.spec.ts`：版本键更新 + connection 断言移入已打补丁组。
 回滚方式：`git checkout HEAD~1 -- .` 恢复外层全部文件后重跑 `corepack yarn install`；子模块 `git checkout 88556303aa && git push origin +88556303aa:main` 并将 upstream.json 指回；应用关闭后重打包即回到 rc.8 状态。
+
+## 2026-08-22 - Task: 舍弃 fast 功能，移除外挂 dsh-fast 插件
+
+### What was done
+
+- 经用户决策舍弃 fast 功能：rc.2 迁移后外挂 dsh-fast 的 `/fast` 命令静默失效（其编译产物绑定旧 API，命令注册 effect 在新组合下不再执行），继续维护该外挂的成本高于价值。
+- 移除范围：桌面 `file:vendor/dsh-fast` 依赖与 `vendor/dsh-fast/**` files 项、vendor 目录树、cordis.patch.yml 两处 fast 组合行、fast-policy 测试、packaged-runtime 校验条目；package.spec 改为断言插件**不存在**（无依赖、无 vendor、补丁无引用）；verify-profile-boot 同步断言 fast 能力不再出现。
+- 保留项：`dsh-session@0.1.1-rc.2.patch` 继续携带 `fast/mode`/`model-policy/fast` 事件类型注册，保证含历史 fast 事件的旧会话日志可读；`vendor/dsh-llm-pi-ai` 不受影响照常发布。
+
+### Testing
+
+- 桌面 build ✓；vitest 292/292 通过（含新的「无 Fast 插件」断言组）。
+- 重打包完成并核验：dist 内无 dsh-fast、全部包为 rc.2、盘符切换 API 在位。
+
+### Notes
+
+改动文件清单：
+- `dsh-plugin-desktop/package.json` / `cordis.patch.yml` / `tests/package.spec.ts` / `scripts/verify-packaged-runtime.ts` / `src/profile.ts`（注释）/ `tests/fast-policy.spec.ts`（删除）/ `vendor/dsh-fast`（删除）。
+- `dsh-plugin-desktop/scripts/verify-profile-boot.mjs`：boot 注入正则适配 rc.2 + fast 能力反断言。
+- 已推送 `ff145ac588`；当前 dist 为「rc.2、无 fast」的干净版本。
+回滚方式：恢复本提交之前的提交（`git revert ff145ac588 c5b8012`）并重打包。

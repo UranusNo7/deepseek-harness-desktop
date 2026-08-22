@@ -149,8 +149,8 @@ try {
   if (ctx.get('desktopPnpm') === undefined) {
     throw new Error('assembled desktop profile is missing the desktop pnpm Host capability')
   }
-  if (ctx.get('fast') === undefined) {
-    throw new Error('assembled desktop profile is missing the fast Host capability')
+  if (ctx.get('fast') !== undefined) {
+    throw new Error('assembled desktop profile unexpectedly still provides the fast Host capability')
   }
   if (ctx.desktopProfiles.current.name !== 'desktop'
     || ctx.desktopProfiles.current.dir !== prepared.profile.dir) {
@@ -234,3 +234,6 @@ try {
   pnpmRuntime?.dispose()
   rmSync(home, { recursive: true, force: true })
 }
+
+
+

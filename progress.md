@@ -453,3 +453,57 @@
 - `dsh-plugin-desktop/scripts/verify-profile-boot.mjs`：boot 注入正则适配 rc.2 + fast 能力反断言。
 - 已推送 `ff145ac588`；当前 dist 为「rc.2、无 fast」的干净版本。
 回滚方式：恢复本提交之前的提交（`git revert ff145ac588 c5b8012`）并重打包。
+
+## 2026-08-22 - Task: 修复 OpenAI Responses 重放请求的未知 status 参数
+
+### What was done
+
+- 在桌面 Yarn workspace 中为 `@earendil-works/pi-ai@0.82.1` 增加受控 patch：历史 assistant 文本重放为 Responses `input` 时不再携带只属于输出项的 `status: "completed"`；工具搜索相关状态字段保持不变。
+- 将同一修复同步到当前 `dist/win-unpacked` 解包运行时，使 DSH Desktop 下次启动即可使用修复；未修改 `deepseek-harness/` 子模块。
+- 增加桌面包 surface 回归断言，并在中英文 README 的已知限制中记录严格 Responses-compatible endpoint 的兼容行为。
+
+### Testing
+
+- `corepack yarn install`：通过；Yarn 4.18.0 仅报告既有 peer dependency warning（YN0086）。
+- `corepack yarn install --immutable`：通过。
+- `corepack yarn workspace dsh-plugin-desktop typecheck`：通过。
+- `corepack yarn workspace dsh-plugin-desktop test`：通过，31 个测试文件、292 个用例。
+- `corepack yarn workspace dsh-plugin-desktop vitest run tests/package.spec.ts`：通过，15 个用例。
+- 直接捕获 `pi-ai` 请求 payload：通过，历史 assistant 文本保留且 `input` 中该 assistant 项无 `status`；解包运行时同样通过。
+- `package:dir`：构建阶段通过，但 Electron Builder 清理现有 `dist/win-unpacked` 时因目录被锁定报 `EBUSY`，未生成全新解包目录；现有解包运行时已完成同一行级修复。
+
+### Notes
+
+改动文件清单：
+- `package.json`：注册 `@earendil-works/pi-ai@0.82.1` 的 Yarn patch resolution。
+- `patches/pi-ai@0.82.1.patch`：移除历史 assistant replay 输入中的 `status` 字段。
+- `yarn.lock`：记录 patched `pi-ai` locator、hash 与依赖锁定结果；保留任务开始前已有的无关锁文件变更。
+- `dsh-plugin-desktop/tests/package.spec.ts`：增加 patch resolution 与 patch 内容回归断言。
+- `dsh-plugin-desktop/README.md`：记录严格 Responses-compatible endpoint 的重放字段行为。
+- `dsh-plugin-desktop/README.zh.md`：同步中文兼容行为说明。
+- `progress.md`：追加本轮实施与验证证据。
+- `dsh-plugin-desktop/dist/win-unpacked/resources/app.asar.unpacked/node_modules/@earendil-works/pi-ai/dist/api/openai-responses-shared.js`：同步当前解包运行时的修复；该目录为生成产物，不作为持久化来源。
+
+回滚方式：删除 `@earendil-works/pi-ai` 两条 resolution 与 `patches/pi-ai@0.82.1.patch`，恢复 `yarn.lock` 中对应 patched locator 后执行 `corepack yarn install`；如需恢复当前解包运行时，关闭 DSH Desktop 后重新执行 `corepack yarn workspace dsh-plugin-desktop package:dir`。本轮未回滚用户已有的其他工作区改动。
+
+## 2026-08-22 - Task: 修复 GPT 会话的沙箱升级误报（danger-full-access 放行）
+
+### What was done
+
+- 定位：GPT 系模型习惯在 shell/文件调用上附带 `sandbox_permissions`+`justification`；rc.2 的 `approveEscalation` 对非严格变宽请求一律失败关闭，而默认权限预设是 danger-full-access——请求比当前模式「更窄」，导致每次带升级参数的调用直接报错。
+- 修复：`approveEscalation` 在 effective mode 已为 `danger-full-access` 时直接授予当前模式（不再提示、不再拒绝）；低于顶层的非变宽请求仍失败关闭。上游规范测试同步改为断言该分叉行为。
+- 发布链路：新增 `patches/dsh-sandbox@0.1.1-rc.2.patch` 与 resolutions 两条；已热补进 dist。子模块提交 `a69a637916` 已推送 fork main。
+
+### Testing
+
+- 沙箱/shell/fs 四包聚焦测试：37 文件 / 634 用例全部通过。
+- 内容核验：安装副本与 dist 的 `dsh-sandbox/lib/index.js` 均含新授予逻辑。
+
+### Notes
+
+改动文件清单：
+- 子模块 `packages/sandbox/sandbox/src/escalation.ts` + 测试（推送 fork main `a69a637916`）。
+- `patches/dsh-sandbox@0.1.1-rc.2.patch`：新增。
+- `package.json` resolutions / `yarn.lock`：dsh-sandbox 补丁引用。
+- dist 内 dsh-sandbox `lib/index.js`：热补覆盖（未跟踪产物）。
+回滚方式：删除补丁文件并还原 resolutions/yarn.lock 后重跑 `corepack yarn install`；dist 重打包即回到 rc.2 原始行为。

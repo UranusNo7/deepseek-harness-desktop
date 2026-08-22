@@ -39,9 +39,3 @@
         apiKeyEnvs:
           - FIRECRAWL_API_KEY
         keyCooldownMs: 300000
-
-# Fast mode (session-scoped tier `fast` -> OpenAI `priority`), owns `fast/mode`
-# and legacy `model-policy/fast`; provides /fast [on|off|status].
-- insert:
-    - id: fast
-      name: '@deepseek-ai/dsh-fast'

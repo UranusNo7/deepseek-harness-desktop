@@ -319,11 +319,7 @@ function migrateLegacyFirecrawlInsert(patches: PatchOptions[]): PatchOptions[] {
 }
 
 /**
- * Drop the logical model policy rows. The desktop now keeps only `fast` (physical
- * `dsh-llm-pi-ai` + `dsh-fast`); logical `model-policy`/`codex` is not needed
- * for `muse-spark` and its `model` locale collides with the new `dsh-fast`
- * composition. Keep old profiles bootable by silently dropping those rows
- * without rewriting the user's patch file.
+ * Drop the logical model policy rows. The desktop composes only the physical\r\n * providers (dsh-llm-pi-ai); logical model-policy/codex rows from older\r\n * profiles are silently dropped, keeping those profiles bootable without\r\n * rewriting the user's patch file.
  */
 function dropModelPolicy(patches: PatchOptions[]): PatchOptions[] {
   return patches.flatMap((patch) => {

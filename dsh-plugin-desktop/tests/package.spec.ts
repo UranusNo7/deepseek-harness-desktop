@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { readFileSync, readdirSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
 import sharp from 'sharp'
@@ -117,23 +117,14 @@ describe('published package surface', () => {
     expect(metadata).toContain('Firecrawl provider')
   })
 
-  it('ships the Fast and pi-ai vendors and defers to upstream fast', () => {
-    expect(manifest.dependencies?.['@deepseek-ai/dsh-fast']).toBe('file:vendor/dsh-fast')
+  it('ships the pi-ai vendor and no Fast plugin', () => {
+    expect(manifest.dependencies).not.toHaveProperty('@deepseek-ai/dsh-fast')
+    expect(existsSync(new URL('vendor/dsh-fast', packageRoot))).toBe(false)
     expect(manifest.dependencies?.['@deepseek-ai/dsh-llm-pi-ai']).toBe(
       'file:vendor/dsh-llm-pi-ai',
     )
     expect(manifest.dependencies).not.toHaveProperty('@deepseek-ai/dsh-llm-model-policy')
     expect(manifest.dependencies).not.toHaveProperty('@deepseek-ai/dsh-codex-model-policy')
-    const fastManifest = JSON.parse(readFileSync(
-      new URL('vendor/dsh-fast/package.json', packageRoot),
-      'utf8',
-    )) as { name?: unknown; main?: unknown; types?: unknown; version?: unknown }
-    expect(fastManifest).toEqual(expect.objectContaining({
-      name: '@deepseek-ai/dsh-fast',
-      main: 'lib/index.js',
-      types: 'lib/types/index.d.ts',
-    }))
-    expect(typeof fastManifest.version).toBe('string')
     const piManifest = JSON.parse(readFileSync(
       new URL('vendor/dsh-llm-pi-ai/package.json', packageRoot),
       'utf8',
@@ -144,15 +135,12 @@ describe('published package surface', () => {
       types: 'lib/types/index.d.ts',
     }))
     expect(typeof piManifest.version).toBe('string')
-    const fastRuntime = readFileSync(new URL('vendor/dsh-fast/lib/fast.js', packageRoot), 'utf8')
-    expect(fastRuntime).toContain('fast/mode')
     const piRuntime = readFileSync(new URL('vendor/dsh-llm-pi-ai/lib/index.js', packageRoot), 'utf8')
     expect(piRuntime).toContain('PiAiAdapter')
-    const fastCommands = readFileSync(new URL('vendor/dsh-fast/lib/index.js', packageRoot), 'utf8')
-    expect(fastCommands).toMatch(/fast/u)
     const patch = readFileSync(new URL('cordis.patch.yml', packageRoot), 'utf8').replaceAll('\r\n', '\n')
     expect(patch).not.toContain('codex-model-policy')
     expect(patch).not.toContain("name: '@deepseek-ai/dsh-llm-model-policy'")
+    expect(patch).not.toContain('dsh-fast')
     for (const key of [
       '@deepseek-ai/dsh-sandbox-windows-acl@npm:0.1.1-rc.2',
       '@deepseek-ai/dsh-sandbox-windows-acl@npm:^0.1.1-rc.2',
@@ -240,7 +228,6 @@ describe('published package surface', () => {
       'build/app-icon-mac.png',
       'build/tray-icon.svg',
       'build/tray-icon*.png',
-      'vendor/dsh-fast/**',
       'vendor/dsh-llm-pi-ai/**',
       'docs/**',
     ]))
